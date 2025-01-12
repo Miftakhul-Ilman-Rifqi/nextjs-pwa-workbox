@@ -73,7 +73,8 @@ export function CustomerList() {
                         {/* <div>Total Customer: {isLoading ? "..." : total}</div> */}
                         <div>Total Customer: {total}</div>
                         <div>
-                            Terfilter: {debouncedSearch ? filteredTotal : "-"}
+                            {/* Terfilter: {debouncedSearch ? filteredTotal : "-"} */}
+                            {debouncedSearch ? filteredTotal : ""}
                         </div>
                     </div>
                 </div>
