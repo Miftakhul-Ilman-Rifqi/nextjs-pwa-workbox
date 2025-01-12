@@ -57,27 +57,31 @@ import {
 import { handleError } from "@/lib/errors/error-handler";
 import { updateCustomerSchema } from "@/validation/customer-validation";
 
+// GET request
 export async function GET(
     request: NextRequest,
-    { params }: { params: Record<string, string> }
+    context: { params: { customerId: string } }
 ) {
     try {
-        const result = await getCustomerDetailService(params.customerId);
+        const { customerId } = context.params; // Ambil customerId dari context.params
+        const result = await getCustomerDetailService(customerId);
         return NextResponse.json(result, { status: result.statusCode });
     } catch (error) {
         return handleError(error);
     }
 }
 
+// PATCH request
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: Record<string, string> }
+    context: { params: { customerId: string } }
 ) {
     try {
         const body = await request.json();
+        const { customerId } = context.params; // Ambil customerId dari context.params
         const validatedData = updateCustomerSchema.parse({
             ...body,
-            customer_id: params.customerId,
+            customer_id: customerId,
         });
         const result = await updateCustomerService(validatedData);
         return NextResponse.json(result, { status: result.statusCode });
@@ -86,12 +90,14 @@ export async function PATCH(
     }
 }
 
+// DELETE request
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: Record<string, string> }
+    context: { params: { customerId: string } }
 ) {
     try {
-        const result = await deleteCustomerService(params.customerId);
+        const { customerId } = context.params; // Ambil customerId dari context.params
+        const result = await deleteCustomerService(customerId);
         return NextResponse.json(result, { status: result.statusCode });
     } catch (error) {
         return handleError(error);
