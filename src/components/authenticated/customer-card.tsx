@@ -2,14 +2,19 @@ import Image from "next/image";
 import { CITIZENSHIP } from "@prisma/client";
 import { Card } from "@/components/ui/card";
 import type { CustomerDisplay } from "@/types/customer-types";
+import { useRouter } from "next/navigation";
 
 interface CustomerCardProps {
     customer: CustomerDisplay;
 }
 
 export function CustomerCard({ customer }: CustomerCardProps) {
+    const router = useRouter();
     return (
-        <Card className="p-4 hover:shadow-md transition-shadow bg-blue-600 dark:bg-blue-700 text-white">
+        <Card
+            className="p-4 hover:shadow-md transition-shadow cursor-pointer bg-blue-600 dark:bg-blue-700 text-white"
+            onClick={() => router.push(`/customer/${customer.customer_id}`)}
+        >
             <div className="flex gap-4">
                 {/* Image */}
                 <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-blue-100 dark:bg-blue-800 flex-shrink-0">

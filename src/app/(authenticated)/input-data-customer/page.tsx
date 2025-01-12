@@ -1,4 +1,4 @@
-import CustomerForm from "@/components/authenticated/customer-form";
+import { CustomerForm } from "@/components/authenticated/customer-form";
 
 export default function InputDataCustomerPage() {
     return (

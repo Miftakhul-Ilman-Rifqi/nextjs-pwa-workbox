@@ -1,9 +1,11 @@
 import useSWRMutation from "swr/mutation";
 import { api } from "@/lib/axios";
 import type {
+    CustomerDetailResponse,
     CustomerRequest,
     CustomerResponse,
     GetCustomersResponse,
+    UpdateCustomerResponse,
 } from "@/types/customer-types";
 import useSWR from "swr";
 import { SortOption } from "@/types/filter-types";
@@ -122,14 +124,49 @@ export function useCustomers({
             const response = await api.get<GetCustomersResponse>(
                 `/authenticated/customer${queryString ? `?${queryString}` : ""}`
             );
+            console.log("API Response:", response.data); // Debug
             return response.data;
         }
     );
 
     return {
         customers: data?.customers ?? [],
-        filteredTotal: data?.filteredTotal ?? 0,
+        // filteredTotal: data?.filteredTotal ?? 0,
+        filteredTotal: data?.filteredTotal, // Remove default value
         isLoading,
         error,
+    };
+}
+
+export function useCustomerDetail(customerId: string) {
+    const { data, error, isLoading } = useSWR(
+        `/authenticated/customer/${customerId}`,
+        async () => {
+            const response = await api.get<CustomerDetailResponse>(
+                `/authenticated/customer/${customerId}`
+            );
+            return response.data;
+        }
+    );
+
+    return {
+        customer: data?.customer,
+        isLoading,
+        error,
+    };
+}
+
+export function useUpdateCustomer(customerId: string) {
+    const { trigger, isMutating } = useSWRMutation(
+        `/authenticated/customer/${customerId}`,
+        async (url, { arg }: { arg: CustomerRequest }) => {
+            const response = await api.patch<UpdateCustomerResponse>(url, arg);
+            return response.data;
+        }
+    );
+
+    return {
+        updateCustomer: trigger,
+        isLoading: isMutating,
     };
 }

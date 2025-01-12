@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { customerSchema } from "@/validation/customer-validation";
-import type { CustomerRequest } from "@/types/customer-types";
+import type { CustomerDetail, CustomerRequest } from "@/types/customer-types";
 import { CITIZENSHIP } from "@prisma/client";
 import { useRef, useState } from "react";
 import Image from "next/image";
@@ -38,27 +38,61 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { countries } from "@/lib/constants";
 import { useRouter } from "next/navigation";
-import { useCreateCustomer } from "@/hooks/use-customer";
+import { useCreateCustomer, useUpdateCustomer } from "@/hooks/use-customer";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 
-export default function CustomerForm() {
+// export default function CustomerForm() {
+//     const router = useRouter();
+//     const { createCustomer, isLoading } = useCreateCustomer();
+//     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+//     const fileInputRef = useRef<HTMLInputElement>(null);
+
+//     const form = useForm<CustomerRequest>({
+//         resolver: zodResolver(customerSchema),
+//         defaultValues: {
+//             fullname: "",
+//             email: "",
+//             phone_number: "",
+//             address: "",
+//             dob: new Date().toISOString(),
+//             citizenship: CITIZENSHIP.WNI,
+//             country: "",
+//             images: null,
+//         },
+//     });
+interface CustomerFormProps {
+    mode?: "create" | "edit";
+    initialData?: CustomerDetail;
+    customerId?: string;
+}
+
+export function CustomerForm({
+    mode = "create",
+    initialData,
+    customerId,
+}: CustomerFormProps) {
     const router = useRouter();
-    const { createCustomer, isLoading } = useCreateCustomer();
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const { createCustomer, isLoading: isLoadingCreate } = useCreateCustomer();
+    const { updateCustomer, isLoading: isLoadingUpdate } = useUpdateCustomer(
+        customerId || ""
+    );
+    const [previewUrl, setPreviewUrl] = useState<string | null>(
+        initialData?.images || null
+    );
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const form = useForm<CustomerRequest>({
         resolver: zodResolver(customerSchema),
         defaultValues: {
-            fullname: "",
-            email: "",
-            phone_number: "",
-            address: "",
-            dob: new Date().toISOString(),
-            citizenship: CITIZENSHIP.WNI,
-            country: "",
-            images: null,
+            fullname: initialData?.fullname || "",
+            email: initialData?.email || "",
+            phone_number: initialData?.phone_number || "",
+            address: initialData?.address || "",
+            dob: initialData?.dob || new Date().toISOString(),
+            citizenship: initialData?.citizenship || CITIZENSHIP.WNI,
+            country: initialData?.country || "",
+            images: initialData?.images || null,
         },
     });
 
@@ -93,20 +127,49 @@ export default function CustomerForm() {
         }
     };
 
+    // const onSubmit = async (data: CustomerRequest) => {
+    //     try {
+    //         const response = await createCustomer(data);
+
+    //         if (response.statusCode === 201) {
+    //             toast.success("Data customer berhasil disimpan");
+    //             form.reset();
+    //             router.push("/list-customer");
+    //         }
+    //     } catch (error) {
+    //         if (error instanceof AxiosError) {
+    //             toast.error(
+    //                 error.response?.data?.message ||
+    //                     "Terjadi kesalahan saat menyimpan data"
+    //             );
+    //         } else {
+    //             toast.error("Terjadi kesalahan yang tidak diketahui");
+    //         }
+    //     }
+    // };
     const onSubmit = async (data: CustomerRequest) => {
         try {
-            const response = await createCustomer(data);
-
-            if (response.statusCode === 201) {
-                toast.success("Data customer berhasil disimpan");
-                form.reset();
-                router.push("/list-customer");
+            if (mode === "edit" && customerId) {
+                const response = await updateCustomer(data);
+                if (response.statusCode === 200) {
+                    toast.success("Data customer berhasil diperbarui");
+                    router.push(`/customer/${customerId}`);
+                }
+            } else {
+                const response = await createCustomer(data);
+                if (response.statusCode === 201) {
+                    toast.success("Data customer berhasil disimpan");
+                    form.reset();
+                    router.push("/list-customer");
+                }
             }
         } catch (error) {
             if (error instanceof AxiosError) {
                 toast.error(
                     error.response?.data?.message ||
-                        "Terjadi kesalahan saat menyimpan data"
+                        `Terjadi kesalahan saat ${
+                            mode === "edit" ? "memperbarui" : "menyimpan"
+                        } data`
                 );
             } else {
                 toast.error("Terjadi kesalahan yang tidak diketahui");
@@ -117,8 +180,13 @@ export default function CustomerForm() {
     return (
         <Card className="w-full max-w-[500px] border-0 shadow-lg bg-white dark:bg-gray-950">
             <CardHeader className="space-y-1">
-                <CardTitle className="text-2xl text-center font-bold text-blue-700 dark:text-blue-500">
+                {/* <CardTitle className="text-2xl text-center font-bold text-blue-700 dark:text-blue-500">
                     Input Data Customer
+                </CardTitle> */}
+                <CardTitle className="text-2xl text-center font-bold text-blue-700 dark:text-blue-500">
+                    {mode === "edit"
+                        ? "Edit Data Customer"
+                        : "Input Data Customer"}
                 </CardTitle>
             </CardHeader>
             <CardContent className="pt-4">
@@ -517,12 +585,29 @@ export default function CustomerForm() {
                             )}
                         />
 
-                        <Button
+                        {/* <Button
                             type="submit"
                             className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-semibold"
                             disabled={isLoading}
                         >
                             {isLoading ? "Menyimpan..." : "Simpan Data"}
+                        </Button> */}
+                        <Button
+                            type="submit"
+                            className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-semibold"
+                            disabled={
+                                mode === "edit"
+                                    ? isLoadingUpdate
+                                    : isLoadingCreate
+                            }
+                        >
+                            {mode === "edit"
+                                ? isLoadingUpdate
+                                    ? "Menyimpan..."
+                                    : "Simpan Perubahan"
+                                : isLoadingCreate
+                                ? "Menyimpan..."
+                                : "Simpan Data"}
                         </Button>
                     </form>
                 </Form>

@@ -1,0 +1,17 @@
+{
+    "name": "Customer Management App",
+    "short_name": "CMA",
+    "description": "Aplikasi manajemen data customer",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#2563eb",
+    "icons": [
+        {
+            "src": "/vercel.svg",
+            "sizes": "256x256",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ]
+}

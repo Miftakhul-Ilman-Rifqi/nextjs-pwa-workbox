@@ -29,6 +29,8 @@ export function CustomerList() {
         inputDate: activeFilter?.inputDate,
     });
 
+    console.log("Response data:", { customers, filteredTotal }); // Debug
+
     const handleApplyFilter = (sort: SortOption, filter: FilterOption) => {
         setActiveSort(sort);
         setActiveFilter(filter);
@@ -72,10 +74,16 @@ export function CustomerList() {
                     <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-4">
                         {/* <div>Total Customer: {isLoading ? "..." : total}</div> */}
                         <div>Total Customer: {total}</div>
+                        {/* <div>
+                            Terfilter: {debouncedSearch ? filteredTotal : "-"}
+                        </div> */}
                         <div>
-                            {/* Terfilter: {debouncedSearch ? filteredTotal : "-"} */}
-                            {debouncedSearch ? filteredTotal : ""}
+                            Terfilter:{" "}
+                            {activeSort || activeFilter || debouncedSearch
+                                ? filteredTotal
+                                : "-"}
                         </div>
+                        {/* {debouncedSearch ? filteredTotal : ""} */}
                     </div>
                 </div>
             </div>
