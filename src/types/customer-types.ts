@@ -32,6 +32,7 @@ export interface GetCustomersResponse {
     customers: CustomerDisplay[];
     statusCode: number;
     filteredTotal?: number;
+    nextCursor?: string | null; // Tambahkan ini
 }
 
 export interface SearchCustomersResponse {

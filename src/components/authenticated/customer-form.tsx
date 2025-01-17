@@ -42,25 +42,6 @@ import { useCreateCustomer, useUpdateCustomer } from "@/hooks/use-customer";
 import { toast } from "sonner";
 import { AxiosError } from "axios";
 
-// export default function CustomerForm() {
-//     const router = useRouter();
-//     const { createCustomer, isLoading } = useCreateCustomer();
-//     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-//     const fileInputRef = useRef<HTMLInputElement>(null);
-
-//     const form = useForm<CustomerRequest>({
-//         resolver: zodResolver(customerSchema),
-//         defaultValues: {
-//             fullname: "",
-//             email: "",
-//             phone_number: "",
-//             address: "",
-//             dob: new Date().toISOString(),
-//             citizenship: CITIZENSHIP.WNI,
-//             country: "",
-//             images: null,
-//         },
-//     });
 interface CustomerFormProps {
     mode?: "create" | "edit";
     initialData?: CustomerDetail;
@@ -82,6 +63,23 @@ export function CustomerForm({
     );
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // Tambahkan fungsi parser di luar form component
+    const parseDateFromApi = (dateStr: string) => {
+        try {
+            const [day, month, year] = dateStr.split("/").map(Number);
+            let fullYear = year;
+            if (year < 100) {
+                fullYear = year < 50 ? 2000 + year : 1900 + year;
+            }
+            const date = new Date(fullYear, month - 1, day);
+            date.setHours(12, 0, 0, 0);
+            return date.toISOString().split("T")[0]; // Return format YYYY-MM-DD
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (error) {
+            return dateStr;
+        }
+    };
+
     const form = useForm<CustomerRequest>({
         resolver: zodResolver(customerSchema),
         defaultValues: {
@@ -89,7 +87,9 @@ export function CustomerForm({
             email: initialData?.email || "",
             phone_number: initialData?.phone_number || "",
             address: initialData?.address || "",
-            dob: initialData?.dob || new Date().toISOString(),
+            dob: initialData?.dob
+                ? parseDateFromApi(initialData.dob)
+                : new Date().toISOString().split("T")[0],
             citizenship: initialData?.citizenship || CITIZENSHIP.WNI,
             country: initialData?.country || "",
             images: initialData?.images || null,
@@ -127,30 +127,103 @@ export function CustomerForm({
         }
     };
 
-    // const onSubmit = async (data: CustomerRequest) => {
-    //     try {
-    //         const response = await createCustomer(data);
-
-    //         if (response.statusCode === 201) {
-    //             toast.success("Data customer berhasil disimpan");
-    //             form.reset();
-    //             router.push("/list-customer");
-    //         }
-    //     } catch (error) {
-    //         if (error instanceof AxiosError) {
-    //             toast.error(
-    //                 error.response?.data?.message ||
-    //                     "Terjadi kesalahan saat menyimpan data"
-    //             );
-    //         } else {
-    //             toast.error("Terjadi kesalahan yang tidak diketahui");
-    //         }
-    //     }
-    // };
     const onSubmit = async (data: CustomerRequest) => {
         try {
-            if (mode === "edit" && customerId) {
-                const response = await updateCustomer(data);
+            if (mode === "edit" && customerId && initialData) {
+                type CustomerKey = keyof CustomerRequest;
+                const changedFields = Object.entries(data).reduce<
+                    Partial<CustomerRequest>
+                >((acc, [key, currentValue]) => {
+                    const typedKey = key as CustomerKey;
+                    const initialValue = initialData[typedKey];
+
+                    // Special handling for date comparison
+                    if (typedKey === "dob") {
+                        // Parse initial date (format: dd/m/yy)
+                        const parseDate = (dateStr: string) => {
+                            try {
+                                const [day, month, year] = dateStr
+                                    .split("/")
+                                    .map(Number);
+                                let fullYear = year;
+                                if (year < 100) {
+                                    fullYear =
+                                        year < 50 ? 2000 + year : 1900 + year;
+                                }
+                                // Return format YYYY-MM-DD
+                                return `${fullYear}-${month
+                                    .toString()
+                                    .padStart(2, "0")}-${day
+                                    .toString()
+                                    .padStart(2, "0")}`;
+                                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                            } catch (error) {
+                                return dateStr;
+                            }
+                        };
+
+                        // Parse current value (format: date string)
+                        const formatCurrentDate = (dateStr: string) => {
+                            try {
+                                // Remove timezone and get only YYYY-MM-DD
+                                return new Date(dateStr)
+                                    .toISOString()
+                                    .split("T")[0];
+                                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                            } catch (error) {
+                                return dateStr;
+                            }
+                        };
+
+                        const parsedInitialDate = initialValue
+                            ? parseDate(initialValue as string)
+                            : null;
+                        const currentFormattedDate = currentValue
+                            ? formatCurrentDate(currentValue)
+                            : null;
+
+                        if (
+                            currentFormattedDate &&
+                            currentFormattedDate !== parsedInitialDate
+                        ) {
+                            // Kirim dengan format YYYY-MM-DD
+                            acc[typedKey] = currentFormattedDate;
+                        }
+                    }
+                    // Handle optional fields
+                    else if (typedKey === "images" || typedKey === "country") {
+                        if (
+                            typedKey === "images" &&
+                            currentValue !== initialValue
+                        ) {
+                            acc[typedKey] = currentValue;
+                        } else if (
+                            typedKey === "country" &&
+                            currentValue !== initialValue
+                        ) {
+                            acc[typedKey] = currentValue;
+                        }
+                    }
+                    // Regular comparison for required fields
+                    else if (currentValue !== initialValue) {
+                        acc[typedKey] = currentValue;
+                    }
+
+                    return acc;
+                }, {});
+
+                // If no changes were made
+                if (Object.keys(changedFields).length === 0) {
+                    toast.info("Tidak ada perubahan data");
+                    return;
+                }
+
+                // Send only changed fields
+                const response = await updateCustomer({
+                    ...changedFields,
+                    customer_id: customerId,
+                } as CustomerRequest);
+
                 if (response.statusCode === 200) {
                     toast.success("Data customer berhasil diperbarui");
                     router.push(`/customer/${customerId}`);
@@ -172,6 +245,7 @@ export function CustomerForm({
                         } data`
                 );
             } else {
+                console.error("Non-Axios Error:", error);
                 toast.error("Terjadi kesalahan yang tidak diketahui");
             }
         }
@@ -180,9 +254,6 @@ export function CustomerForm({
     return (
         <Card className="w-full max-w-[500px] border-0 shadow-lg bg-white dark:bg-gray-950">
             <CardHeader className="space-y-1">
-                {/* <CardTitle className="text-2xl text-center font-bold text-blue-700 dark:text-blue-500">
-                    Input Data Customer
-                </CardTitle> */}
                 <CardTitle className="text-2xl text-center font-bold text-blue-700 dark:text-blue-500">
                     {mode === "edit"
                         ? "Edit Data Customer"
@@ -287,183 +358,281 @@ export function CustomerForm({
                         <FormField
                             control={form.control}
                             name="dob"
-                            render={({ field }) => (
-                                <FormItem className="flex flex-col">
-                                    <FormLabel className="text-blue-900 dark:text-blue-300">
-                                        Tanggal Lahir
-                                    </FormLabel>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <FormControl>
-                                                <Button
-                                                    variant="outline"
-                                                    className={cn(
-                                                        "w-full pl-3 text-left font-normal",
-                                                        "bg-blue-50/70 border-blue-200 hover:bg-blue-50 focus:bg-blue-50 dark:bg-blue-950/20 dark:border-blue-900 dark:hover:bg-blue-950/30 dark:focus:bg-blue-950/30",
-                                                        !field.value &&
-                                                            "text-muted-foreground"
-                                                    )}
-                                                >
-                                                    {field.value ? (
-                                                        format(
-                                                            new Date(
-                                                                field.value
-                                                            ),
-                                                            "dd MMMM yyyy",
-                                                            {
-                                                                locale: id,
-                                                            }
-                                                        )
-                                                    ) : (
-                                                        <span>
-                                                            Masukkan Tanggal
-                                                            Lahir
-                                                        </span>
-                                                    )}
-                                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                                </Button>
-                                            </FormControl>
-                                        </PopoverTrigger>
-                                        <PopoverContent
-                                            className="w-auto min-w-[320px]"
-                                            align="center"
-                                            sideOffset={5}
-                                        >
-                                            <div className="flex flex-col space-y-4 p-2">
-                                                <div className="flex justify-between gap-2">
-                                                    {/* Dropdown Tahun */}
-                                                    <Select
-                                                        onValueChange={(
-                                                            year
-                                                        ) => {
-                                                            const current =
-                                                                new Date(
-                                                                    field.value
-                                                                );
-                                                            const newDate =
-                                                                new Date(
-                                                                    parseInt(
-                                                                        year
-                                                                    ),
-                                                                    current.getMonth(),
-                                                                    current.getDate()
-                                                                );
-                                                            field.onChange(
-                                                                newDate.toISOString()
-                                                            );
-                                                        }}
-                                                        value={new Date(
-                                                            field.value
-                                                        )
-                                                            .getFullYear()
-                                                            .toString()}
-                                                    >
-                                                        <SelectTrigger className="w-[110px]">
-                                                            <SelectValue placeholder="Tahun" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {Array.from(
-                                                                { length: 124 },
-                                                                (_, i) => (
-                                                                    <SelectItem
-                                                                        key={
-                                                                            2024 -
-                                                                            i
-                                                                        }
-                                                                        value={(
-                                                                            2024 -
-                                                                            i
-                                                                        ).toString()}
-                                                                    >
-                                                                        {2024 -
-                                                                            i}
-                                                                    </SelectItem>
-                                                                )
-                                                            )}
-                                                        </SelectContent>
-                                                    </Select>
+                            render={({ field }) => {
+                                // Parser untuk format tanggal dari API
+                                const parseInitialDate = (dateStr: string) => {
+                                    try {
+                                        const [day, month, year] = dateStr
+                                            .split("/")
+                                            .map(Number);
 
-                                                    {/* Dropdown Bulan */}
-                                                    <Select
-                                                        onValueChange={(
-                                                            month
-                                                        ) => {
-                                                            const current =
-                                                                new Date(
-                                                                    field.value
-                                                                );
-                                                            const newDate =
-                                                                new Date(
-                                                                    current.getFullYear(),
-                                                                    parseInt(
-                                                                        month
-                                                                    ),
-                                                                    current.getDate()
-                                                                );
-                                                            field.onChange(
-                                                                newDate.toISOString()
-                                                            );
-                                                        }}
-                                                        value={new Date(
-                                                            field.value
-                                                        )
-                                                            .getMonth()
-                                                            .toString()}
+                                        // Konversi 2-digit year ke 4-digit year
+                                        let fullYear = year;
+                                        if (year < 100) {
+                                            fullYear =
+                                                year < 50
+                                                    ? 2000 + year
+                                                    : 1900 + year;
+                                        }
+
+                                        // Buat objek Date dengan urutan yang benar (bulan dimulai dari 0)
+                                        const date = new Date(
+                                            fullYear,
+                                            month - 1,
+                                            day
+                                        );
+
+                                        // Validasi tanggal
+                                        if (isNaN(date.getTime())) {
+                                            return new Date(); // fallback ke tanggal hari ini jika invalid
+                                        }
+
+                                        // Set waktu ke tengah hari
+                                        date.setHours(12, 0, 0, 0);
+                                        return date;
+                                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                                    } catch (error) {
+                                        return new Date(); // fallback ke tanggal hari ini jika error
+                                    }
+                                };
+
+                                // Parse nilai awal jika formatnya dd/mm/yy
+                                const initialValue =
+                                    field.value &&
+                                    typeof field.value === "string" &&
+                                    field.value.includes("/")
+                                        ? parseInitialDate(field.value)
+                                        : field.value;
+
+                                return (
+                                    <FormItem className="flex flex-col">
+                                        <FormLabel className="text-blue-900 dark:text-blue-300">
+                                            Tanggal Lahir
+                                        </FormLabel>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <FormControl>
+                                                    <Button
+                                                        variant="outline"
+                                                        className={cn(
+                                                            "w-full pl-3 text-left font-normal",
+                                                            "bg-blue-50/70 border-blue-200 hover:bg-blue-50 focus:bg-blue-50 dark:bg-blue-950/20 dark:border-blue-900 dark:hover:bg-blue-950/30 dark:focus:bg-blue-950/30",
+                                                            !initialValue &&
+                                                                "text-muted-foreground"
+                                                        )}
                                                     >
-                                                        <SelectTrigger className="w-[110px]">
-                                                            <SelectValue placeholder="Bulan" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {Array.from(
-                                                                { length: 12 },
-                                                                (_, i) => (
-                                                                    <SelectItem
-                                                                        key={i}
-                                                                        value={i.toString()}
-                                                                    >
-                                                                        {format(
-                                                                            new Date(
-                                                                                0,
-                                                                                i
-                                                                            ),
-                                                                            "MMMM",
-                                                                            {
-                                                                                locale: id,
-                                                                            }
-                                                                        )}
-                                                                    </SelectItem>
-                                                                )
-                                                            )}
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
+                                                        {initialValue ? (
+                                                            format(
+                                                                new Date(
+                                                                    initialValue
+                                                                ),
+                                                                "dd MMMM yyyy",
+                                                                { locale: id }
+                                                            )
+                                                        ) : (
+                                                            <span>
+                                                                Masukkan Tanggal
+                                                                Lahir
+                                                            </span>
+                                                        )}
+                                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                                    </Button>
+                                                </FormControl>
+                                            </PopoverTrigger>
+                                            <PopoverContent
+                                                className="w-auto p-0"
+                                                align="center"
+                                            >
                                                 <Calendar
                                                     mode="single"
                                                     selected={
-                                                        field.value
+                                                        initialValue
                                                             ? new Date(
-                                                                  field.value
+                                                                  initialValue
                                                               )
                                                             : undefined
                                                     }
                                                     onSelect={(date) => {
-                                                        field.onChange(
-                                                            date?.toISOString() ??
+                                                        if (date) {
+                                                            const selectedDate =
+                                                                new Date(date);
+                                                            selectedDate.setHours(
+                                                                12,
+                                                                0,
+                                                                0,
+                                                                0
+                                                            );
+                                                            field.onChange(
+                                                                selectedDate
+                                                                    .toISOString()
+                                                                    .split(
+                                                                        "T"
+                                                                    )[0]
+                                                            );
+                                                        } else {
+                                                            field.onChange(
                                                                 null
-                                                        );
+                                                            );
+                                                        }
                                                     }}
                                                     disabled={(date) =>
                                                         date > new Date()
                                                     }
                                                     initialFocus
-                                                    className="rounded-md border"
+                                                    footer={
+                                                        <div className="flex gap-2 p-3">
+                                                            <Select
+                                                                onValueChange={(
+                                                                    month
+                                                                ) => {
+                                                                    const current =
+                                                                        field.value
+                                                                            ? new Date(
+                                                                                  field.value
+                                                                              )
+                                                                            : new Date();
+                                                                    current.setMonth(
+                                                                        parseInt(
+                                                                            month
+                                                                        )
+                                                                    );
+                                                                    current.setHours(
+                                                                        12,
+                                                                        0,
+                                                                        0,
+                                                                        0
+                                                                    );
+                                                                    field.onChange(
+                                                                        current
+                                                                            .toISOString()
+                                                                            .split(
+                                                                                "T"
+                                                                            )[0]
+                                                                    );
+                                                                }}
+                                                                value={
+                                                                    field.value
+                                                                        ? new Date(
+                                                                              field.value
+                                                                          )
+                                                                              .getMonth()
+                                                                              .toString()
+                                                                        : undefined
+                                                                }
+                                                            >
+                                                                <SelectTrigger className="w-[130px]">
+                                                                    <SelectValue placeholder="Pilih Bulan" />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    {Array.from(
+                                                                        {
+                                                                            length: 12,
+                                                                        },
+                                                                        (
+                                                                            _,
+                                                                            i
+                                                                        ) => (
+                                                                            <SelectItem
+                                                                                key={
+                                                                                    i
+                                                                                }
+                                                                                value={i.toString()}
+                                                                            >
+                                                                                {format(
+                                                                                    new Date(
+                                                                                        0,
+                                                                                        i
+                                                                                    ),
+                                                                                    "MMMM",
+                                                                                    {
+                                                                                        locale: id,
+                                                                                    }
+                                                                                )}
+                                                                            </SelectItem>
+                                                                        )
+                                                                    )}
+                                                                </SelectContent>
+                                                            </Select>
+
+                                                            <Select
+                                                                onValueChange={(
+                                                                    year
+                                                                ) => {
+                                                                    const current =
+                                                                        field.value
+                                                                            ? new Date(
+                                                                                  field.value
+                                                                              )
+                                                                            : new Date();
+                                                                    current.setFullYear(
+                                                                        parseInt(
+                                                                            year
+                                                                        )
+                                                                    );
+                                                                    current.setHours(
+                                                                        12,
+                                                                        0,
+                                                                        0,
+                                                                        0
+                                                                    );
+                                                                    field.onChange(
+                                                                        current
+                                                                            .toISOString()
+                                                                            .split(
+                                                                                "T"
+                                                                            )[0]
+                                                                    );
+                                                                }}
+                                                                value={
+                                                                    field.value
+                                                                        ? new Date(
+                                                                              field.value
+                                                                          )
+                                                                              .getFullYear()
+                                                                              .toString()
+                                                                        : undefined
+                                                                }
+                                                            >
+                                                                <SelectTrigger className="w-[100px]">
+                                                                    <SelectValue placeholder="Tahun" />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    {Array.from(
+                                                                        {
+                                                                            length: 124,
+                                                                        },
+                                                                        (
+                                                                            _,
+                                                                            i
+                                                                        ) => {
+                                                                            const year =
+                                                                                new Date().getFullYear() -
+                                                                                i;
+                                                                            return (
+                                                                                <SelectItem
+                                                                                    key={
+                                                                                        year
+                                                                                    }
+                                                                                    value={year.toString()}
+                                                                                >
+                                                                                    {
+                                                                                        year
+                                                                                    }
+                                                                                </SelectItem>
+                                                                            );
+                                                                        }
+                                                                    )}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                    }
                                                 />
-                                            </div>
-                                        </PopoverContent>
-                                    </Popover>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
+                                            </PopoverContent>
+                                        </Popover>
+                                        <FormMessage />
+                                    </FormItem>
+                                );
+                            }}
                         />
 
                         <FormField
@@ -585,13 +754,6 @@ export function CustomerForm({
                             )}
                         />
 
-                        {/* <Button
-                            type="submit"
-                            className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-semibold"
-                            disabled={isLoading}
-                        >
-                            {isLoading ? "Menyimpan..." : "Simpan Data"}
-                        </Button> */}
                         <Button
                             type="submit"
                             className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-semibold"

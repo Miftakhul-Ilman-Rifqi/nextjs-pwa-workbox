@@ -1,4 +1,5 @@
 import useSWRMutation from "swr/mutation";
+import useSWRInfinite from "swr/infinite";
 import { api } from "@/lib/axios";
 import type {
     CustomerDetailResponse,
@@ -57,51 +58,53 @@ export function useTotalCustomer() {
     };
 }
 
-// export function useCustomers() {
-//     const { data, error, isLoading } = useSWR(
-//         "/authenticated/customer",
-//         async () => {
-//             const response = await api.get<GetCustomersResponse>(
-//                 "/authenticated/customer"
-//             );
-//             return response.data;
-//         }
-//     );
-
-//     return {
-//         customers: data?.customers ?? [],
-//         isLoading,
-//         error,
-//     };
-// }
-
 // // src/hooks/use-customer.ts
-// export function useCustomers(search?: string) {
+// interface UseCustomersParams {
+//     search?: string;
+//     sort?: SortOption;
+//     citizenship?: CITIZENSHIP;
+//     inputDate?: string;
+// }
+
+// export function useCustomers({
+//     search,
+//     sort,
+//     citizenship,
+//     inputDate,
+// }: UseCustomersParams = {}) {
+//     const params = new URLSearchParams();
+//     if (search) params.append("search", search);
+//     if (sort) params.append("sort", sort);
+//     if (citizenship) params.append("citizenship", citizenship);
+//     if (inputDate) params.append("inputDate", inputDate);
+
+//     const queryString = params.toString();
+
 //     const { data, error, isLoading } = useSWR(
-//         // Key akan berubah ketika search berubah
-//         `/authenticated/customer${search ? `?search=${search}` : ""}`,
+//         `/authenticated/customer${queryString ? `?${queryString}` : ""}`,
 //         async () => {
 //             const response = await api.get<GetCustomersResponse>(
-//                 `/authenticated/customer${search ? `?search=${search}` : ""}`
+//                 `/authenticated/customer${queryString ? `?${queryString}` : ""}`
 //             );
+
 //             return response.data;
 //         }
 //     );
 
 //     return {
 //         customers: data?.customers ?? [],
-//         filteredTotal: data?.filteredTotal ?? 0,
+//         // filteredTotal: data?.filteredTotal ?? 0,
+//         filteredTotal: data?.filteredTotal, // Remove default value
 //         isLoading,
 //         error,
 //     };
 // }
-
-// src/hooks/use-customer.ts
 interface UseCustomersParams {
     search?: string;
     sort?: SortOption;
     citizenship?: CITIZENSHIP;
     inputDate?: string;
+    limit?: number;
 }
 
 export function useCustomers({
@@ -109,32 +112,67 @@ export function useCustomers({
     sort,
     citizenship,
     inputDate,
+    limit = 20, // Default limit
 }: UseCustomersParams = {}) {
-    const params = new URLSearchParams();
-    if (search) params.append("search", search);
-    if (sort) params.append("sort", sort);
-    if (citizenship) params.append("citizenship", citizenship);
-    if (inputDate) params.append("inputDate", inputDate);
+    const getKey = (
+        pageIndex: number,
+        previousPageData: GetCustomersResponse | null
+    ) => {
+        if (previousPageData && !previousPageData.nextCursor) return null;
 
-    const queryString = params.toString();
+        const params = new URLSearchParams();
+        if (search) params.append("search", search);
+        if (sort) params.append("sort", sort);
+        if (citizenship) params.append("citizenship", citizenship);
+        if (inputDate) params.append("inputDate", inputDate);
+        params.append("limit", limit.toString());
 
-    const { data, error, isLoading } = useSWR(
-        `/authenticated/customer${queryString ? `?${queryString}` : ""}`,
-        async () => {
-            const response = await api.get<GetCustomersResponse>(
-                `/authenticated/customer${queryString ? `?${queryString}` : ""}`
-            );
-            console.log("API Response:", response.data); // Debug
-            return response.data;
+        if (pageIndex !== 0 && previousPageData?.nextCursor) {
+            params.append("cursor", previousPageData.nextCursor);
         }
-    );
+
+        return `/authenticated/customer${
+            params.toString() ? `?${params.toString()}` : ""
+        }`;
+    };
+
+    const { data, error, size, setSize, isLoading, isValidating } =
+        useSWRInfinite<GetCustomersResponse>(getKey, async (url) => {
+            const response = await api.get<GetCustomersResponse>(url);
+            return response.data;
+        });
+
+    // const customers = data ? data.flatMap((page) => page.customers) : [];
+    // Tambahkan Set untuk mengecek duplikasi
+    const customers = data
+        ? data
+              .flatMap((page) => page.customers)
+              .filter(
+                  (customer, index, self) =>
+                      index ===
+                      self.findIndex(
+                          (c) => c.customer_id === customer.customer_id
+                      )
+              )
+        : [];
+    const filteredTotal = data?.[0]?.filteredTotal ?? 0;
+    const isLoadingMore =
+        isLoading ||
+        (size > 0 && data && typeof data[size - 1] === "undefined");
+    const isEmpty = data?.[0]?.customers.length === 0;
+    const isReachingEnd =
+        isEmpty || (data && !data[data.length - 1]?.nextCursor);
+    const isRefreshing = isValidating && data && data.length === size;
 
     return {
-        customers: data?.customers ?? [],
-        // filteredTotal: data?.filteredTotal ?? 0,
-        filteredTotal: data?.filteredTotal, // Remove default value
+        customers,
+        filteredTotal,
         isLoading,
+        isLoadingMore,
+        isReachingEnd,
+        isRefreshing,
         error,
+        loadMore: () => setSize(size + 1),
     };
 }
 

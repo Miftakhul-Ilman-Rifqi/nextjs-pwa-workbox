@@ -189,22 +189,6 @@ export function FilterDialog({
         </div>
     );
 
-    //     return isMobile ? (
-    //         <Dialog open={open} onOpenChange={onOpenChange}>
-    //             <DialogContent className="sm:max-w-[425px]">
-    //                 <DialogHeader>
-    //                     <DialogTitle>Filter</DialogTitle>
-    //                 </DialogHeader>
-    //                 {Content}
-    //             </DialogContent>
-    //         </Dialog>
-    //     ) : (
-    //         <Popover open={open} onOpenChange={onOpenChange}>
-    //             <PopoverContent className="w-80">{Content}</PopoverContent>
-    //         </Popover>
-    //     );
-    // }
-
     return isMobile ? (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[425px]">

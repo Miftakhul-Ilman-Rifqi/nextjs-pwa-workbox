@@ -5,135 +5,28 @@ import { ArrowLeft, MoreVertical } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/navigation";
-import { use } from "react";
+import { use, useState } from "react";
 
 interface PageProps {
     params: Promise<{ id: string }>;
 }
 
-// export default function CustomerDetailPage({ params }: PageProps) {
-//     const resolvedParams = use(params);
-//     const router = useRouter();
-//     const { customer, isLoading } = useCustomerDetail(resolvedParams.id);
-
-//     if (isLoading) {
-//         return <div>Loading...</div>;
-//     }
-
-//     if (!customer) {
-//         return <div>Customer not found</div>;
-//     }
-
-//     return (
-//         <div className="bg-blue-600 dark:bg-blue-700 text-white rounded-lg p-6 max-w-2xl mx-auto">
-//             {/* Header */}
-//             <div className="flex items-center justify-between mb-6">
-//                 <Button
-//                     variant="ghost"
-//                     size="icon"
-//                     onClick={() => router.back()}
-//                     className="text-white hover:bg-blue-500"
-//                 >
-//                     <ArrowLeft className="h-6 w-6" />
-//                 </Button>
-
-//                 <DropdownMenu>
-//                     <DropdownMenuTrigger asChild>
-//                         <Button
-//                             variant="ghost"
-//                             size="icon"
-//                             className="text-white hover:bg-blue-500"
-//                         >
-//                             <MoreVertical className="h-6 w-6" />
-//                         </Button>
-//                     </DropdownMenuTrigger>
-//                     <DropdownMenuContent align="end">
-//                         <DropdownMenuItem
-//                             onClick={() =>
-//                                 router.push(
-//                                     `/customer/${resolvedParams.id}/edit`
-//                                 )
-//                             }
-//                         >
-//                             Edit
-//                         </DropdownMenuItem>
-//                         <DropdownMenuItem className="text-red-600">
-//                             Hapus
-//                         </DropdownMenuItem>
-//                     </DropdownMenuContent>
-//                 </DropdownMenu>
-//             </div>
-
-//             {/* Image */}
-//             <div className="flex justify-center mb-6">
-//                 <div className="relative w-48 h-48 rounded-lg overflow-hidden bg-blue-500">
-//                     {customer.images ? (
-//                         <Image
-//                             src={customer.images}
-//                             alt={customer.fullname}
-//                             fill
-//                             className="object-cover"
-//                         />
-//                     ) : (
-//                         <div className="w-full h-full flex items-center justify-center text-4xl font-bold">
-//                             {customer.fullname.charAt(0).toUpperCase()}
-//                         </div>
-//                     )}
-//                 </div>
-//             </div>
-
-//             {/* Info */}
-//             <div className="space-y-6">
-//                 <div className="flex justify-between items-start">
-//                     <div className="space-y-1">
-//                         <h2 className="text-xl font-bold">
-//                             {customer.fullname}
-//                         </h2>
-//                         <p className="text-blue-100">{customer.address}</p>
-//                     </div>
-//                     <span className="px-3 py-1 bg-blue-500 rounded-full text-sm">
-//                         {customer.citizenship}
-//                     </span>
-//                 </div>
-
-//                 <div className="space-y-3 text-blue-100">
-//                     <div>
-//                         <label className="text-sm text-blue-200">Email</label>
-//                         <p>{customer.email}</p>
-//                     </div>
-//                     <div>
-//                         <label className="text-sm text-blue-200">Phone</label>
-//                         <p>{customer.phone_number}</p>
-//                     </div>
-//                     <div>
-//                         <label className="text-sm text-blue-200">
-//                             Tanggal Lahir
-//                         </label>
-//                         <p>
-//                             {new Date(customer.dob).toLocaleDateString("id-ID")}
-//                         </p>
-//                     </div>
-//                     {customer.citizenship === "WNA" && (
-//                         <div>
-//                             <label className="text-sm text-blue-200">
-//                                 Negara
-//                             </label>
-//                             <p>{customer.country}</p>
-//                         </div>
-//                     )}
-//                 </div>
-//             </div>
-//         </div>
-//     );
-// }
-
 export default function CustomerDetailPage({ params }: PageProps) {
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const resolvedParams = use(params);
     const router = useRouter();
     const { customer, isLoading } = useCustomerDetail(resolvedParams.id);
@@ -156,6 +49,7 @@ export default function CustomerDetailPage({ params }: PageProps) {
             );
 
             if (response.ok) {
+                setIsDeleteDialogOpen(false);
                 router.push("/list-customer");
             } else {
                 // Handle error, mungkin tampilkan toast error
@@ -201,13 +95,47 @@ export default function CustomerDetailPage({ params }: PageProps) {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                             className="text-red-600 cursor-pointer"
-                            onClick={handleDelete}
+                            onClick={() => setIsDeleteDialogOpen(true)}
                         >
                             Hapus
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
+
+            <Dialog
+                open={isDeleteDialogOpen}
+                onOpenChange={setIsDeleteDialogOpen}
+            >
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Konfirmasi Hapus</DialogTitle>
+                        <DialogDescription>
+                            Apakah Anda yakin ingin menghapus data customer{" "}
+                            <span className="font-medium text-foreground">
+                                {customer.fullname}
+                            </span>
+                            ? Tindakan ini tidak dapat dibatalkan.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setIsDeleteDialogOpen(false)}
+                        >
+                            Batal
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            onClick={handleDelete}
+                        >
+                            Ya, Hapus
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             <div className="flex flex-col md:flex-row gap-8">
                 {/* Image Section */}
@@ -278,14 +206,50 @@ export default function CustomerDetailPage({ params }: PageProps) {
                                     <label className="text-sm text-blue-200 block mb-1">
                                         Tanggal Lahir
                                     </label>
+
                                     <p className="text-blue-50">
-                                        {new Date(
-                                            customer.dob
-                                        ).toLocaleDateString("id-ID", {
-                                            day: "numeric",
-                                            month: "long",
-                                            year: "numeric",
-                                        })}
+                                        {(() => {
+                                            try {
+                                                // Split tanggal berdasarkan "/"
+                                                const [day, month, year] =
+                                                    customer.dob
+                                                        .split("/")
+                                                        .map(Number);
+
+                                                // Konversi 2-digit year ke 4-digit year
+                                                let fullYear = year;
+                                                if (year < 100) {
+                                                    fullYear =
+                                                        year < 50
+                                                            ? 2000 + year
+                                                            : 1900 + year;
+                                                }
+
+                                                // Buat objek Date dengan urutan yang benar (bulan dimulai dari 0)
+                                                const date = new Date(
+                                                    fullYear,
+                                                    month - 1,
+                                                    day
+                                                );
+
+                                                // Validasi tanggal
+                                                if (isNaN(date.getTime())) {
+                                                    return "Format tanggal tidak valid";
+                                                }
+
+                                                return date.toLocaleDateString(
+                                                    "id-ID",
+                                                    {
+                                                        day: "numeric",
+                                                        month: "long",
+                                                        year: "numeric",
+                                                    }
+                                                );
+                                                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                                            } catch (error) {
+                                                return "Format tanggal tidak valid";
+                                            }
+                                        })()}
                                     </p>
                                 </div>
                             </div>
