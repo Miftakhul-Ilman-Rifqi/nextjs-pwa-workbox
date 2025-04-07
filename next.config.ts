@@ -9,7 +9,6 @@ const withPWA = withPWAInit({
     },
     extendDefaultRuntimeCaching: true,
     workboxOptions: {
-        additionalManifestEntries: [{ url: "/~offline", revision: null }],
         runtimeCaching: [
             {
                 urlPattern:
