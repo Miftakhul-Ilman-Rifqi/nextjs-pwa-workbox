@@ -9,6 +9,7 @@ const withPWA = withPWAInit({
     },
     extendDefaultRuntimeCaching: true,
     workboxOptions: {
+        additionalManifestEntries: [{ url: "/~offline", revision: null }],
         runtimeCaching: [
             {
                 urlPattern:
@@ -50,14 +51,16 @@ const withPWA = withPWAInit({
                     cacheableResponse: {
                         statuses: [0, 200],
                     },
-                    plugins: [{
-                        handlerDidError: async () => {
-                            return caches.match('/~offline');
-                        }
-                    }],
+                    plugins: [
+                        {
+                            handlerDidError: async () => {
+                                return caches.match("/~offline");
+                            },
+                        },
+                    ],
                     precacheFallback: {
-                        fallbackURL: '/~offline'
-                    }
+                        fallbackURL: "/~offline",
+                    },
                 },
             },
         ],
