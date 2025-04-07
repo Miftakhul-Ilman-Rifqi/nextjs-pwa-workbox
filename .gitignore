@@ -41,10 +41,6 @@ yarn-error.log*
 next-env.d.ts
 
 
-sw.*
-workbox-*
-swe-worker-*
-fallback-*
 **/public/workbox-*.js
 **/public/sw.js
 **/public/fallback-*.js
