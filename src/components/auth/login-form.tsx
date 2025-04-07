@@ -33,9 +33,9 @@ export default function LoginForm() {
     const onSubmit = async (data: LoginRequest) => {
         try {
             const response = await login(data);
-            if (response.statusCode === 200) {
-                // Set cookie untuk session
-                document.cookie = "isLoggedIn=true; path=/";
+if (response.statusCode === 200) {
+                // Set cookie persisten 30 hari
+                document.cookie = "isLoggedIn=true; path=/; max-age=2592000";
                 router.push("/input-data-customer");
             }
         } catch (error) {
