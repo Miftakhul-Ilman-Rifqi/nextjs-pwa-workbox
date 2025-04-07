@@ -54,7 +54,10 @@ const withPWA = withPWAInit({
                         handlerDidError: async () => {
                             return caches.match('/~offline');
                         }
-                    }]
+                    }],
+                    precacheFallback: {
+                        fallbackURL: '/~offline'
+                    }
                 },
             },
         ],
