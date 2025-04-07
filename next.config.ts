@@ -50,6 +50,19 @@ const withPWA = withPWAInit({
                     cacheableResponse: {
                         statuses: [0, 200],
                     },
+                },
+            },
+            // Tambahkan rute navigasi khusus untuk menangani rute yang belum pernah dikunjungi
+            {
+                urlPattern: ({ url }) => {
+                    const isSameDomain = url.origin === self.location.origin;
+                    return (
+                        isSameDomain && url.pathname.startsWith("/customer/")
+                    );
+                },
+                handler: "NetworkOnly",
+                options: {
+                    cacheName: "customer-pages",
                     plugins: [
                         {
                             handlerDidError: async () => {
@@ -57,9 +70,26 @@ const withPWA = withPWAInit({
                             },
                         },
                     ],
-                    precacheFallback: {
-                        fallbackURL: "/~offline",
-                    },
+                },
+            },
+            // Default navigation fallback untuk semua rute
+            {
+                urlPattern: ({ request, url }) => {
+                    return (
+                        request.mode === "navigate" &&
+                        url.origin === self.location.origin
+                    );
+                },
+                handler: "NetworkOnly",
+                options: {
+                    cacheName: "navigation-fallback",
+                    plugins: [
+                        {
+                            handlerDidError: async () => {
+                                return caches.match("/~offline");
+                            },
+                        },
+                    ],
                 },
             },
         ],
