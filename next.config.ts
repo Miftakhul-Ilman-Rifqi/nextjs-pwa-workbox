@@ -5,16 +5,17 @@ const withPWA = withPWAInit({
     disable: false,
     register: true,
     fallbacks: {
-        document: "/~offline",
+        document: "/_offline",
     },
     extendDefaultRuntimeCaching: true,
     workboxOptions: {
         runtimeCaching: [
             {
-                urlPattern: /^https:\/\/nextjs-pwa-card\.mirifqi\.my\.id\/api\/.*$/,
+                urlPattern:
+                    /^https:\/\/nextjs-pwa-card\.mirifqi\.my\.id\/api\/.*$/,
                 handler: "NetworkFirst",
                 options: {
-                    cacheName: "vercel-api-cache",
+                    cacheName: "api-cache",
                     expiration: {
                         maxEntries: 50,
                         maxAgeSeconds: 300,
@@ -22,21 +23,14 @@ const withPWA = withPWAInit({
                     cacheableResponse: {
                         statuses: [0, 200],
                     },
-                    fetchOptions: {
-                        credentials: 'same-origin',
-                    },
-                    plugins: [{
-                        handlerDidError: async () => {
-                            return caches.match('/~offline') || Response.error();
-                        }
-                    }]
                 },
             },
             {
-                urlPattern: /^https:\/\/nextjs-pwa-card\.mirifqi\.my\.id\/_next\/.*$/,
+                urlPattern:
+                    /^https:\/\/nextjs-pwa-card\.mirifqi\.my\.id\/_next\/.*$/,
                 handler: "CacheFirst",
                 options: {
-                    cacheName: "vercel-static-assets",
+                    cacheName: "next-static",
                     expiration: {
                         maxEntries: 100,
                         maxAgeSeconds: 86400 * 30, // 30 days
@@ -47,7 +41,7 @@ const withPWA = withPWAInit({
                 urlPattern: /^https:\/\/nextjs-pwa-card\.mirifqi\.my\.id\/.*$/,
                 handler: "NetworkFirst",
                 options: {
-                    cacheName: "vercel-pages",
+                    cacheName: "pages-cache",
                     networkTimeoutSeconds: 3, // Fallback to cache if network takes longer than 3 seconds
                     expiration: {
                         maxEntries: 100,
@@ -56,24 +50,8 @@ const withPWA = withPWAInit({
                     cacheableResponse: {
                         statuses: [0, 200],
                     },
-                    fetchOptions: {
-                        credentials: 'same-origin',
-                    },
-                    plugins: [{
-                        handlerDidError: async () => {
-                            return caches.match('/~offline') || Response.error();
-                        },
-                        cacheWillUpdate: async ({response}) => {
-                            // Only cache successful responses
-                            return response.status === 200 ? response : null;
-                        }
-                    }]
                 },
             },
-        ],
-        // Precache offline page
-        additionalManifestEntries: [
-            { url: '/~offline', revision: '1' }
         ],
     },
 });
