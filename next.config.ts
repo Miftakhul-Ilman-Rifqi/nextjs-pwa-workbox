@@ -5,15 +5,15 @@ const withPWA = withPWAInit({
     disable: false,
     register: true,
     fallbacks: {
-        document: "/_offline",
+        document: "/~offline",
     },
     extendDefaultRuntimeCaching: true,
     workboxOptions: {
         runtimeCaching: [
             {
                 urlPattern:
-                    /^https:\/\/nextjs-pwa-card\.mirifqi\.my\.id\/api\/.*$/,
-                handler: "NetworkFirst",
+                    /^(http:\/\/localhost:3000|https:\/\/nextjs-pwa-card\.mirifqi\.my\.id)\/api\/.*$/,
+                handler: "StaleWhileRevalidate",
                 options: {
                     cacheName: "api-cache",
                     expiration: {
@@ -27,29 +27,34 @@ const withPWA = withPWAInit({
             },
             {
                 urlPattern:
-                    /^https:\/\/nextjs-pwa-card\.mirifqi\.my\.id\/_next\/.*$/,
-                handler: "CacheFirst",
+                    /^(http:\/\/localhost:3000|https:\/\/nextjs-pwa-card\.mirifqi\.my\.id)\/_next\/.*$/,
+                handler: "StaleWhileRevalidate",
                 options: {
                     cacheName: "next-static",
                     expiration: {
                         maxEntries: 100,
-                        maxAgeSeconds: 86400 * 30, // 30 days
+                        maxAgeSeconds: 86400,
                     },
                 },
             },
             {
-                urlPattern: /^https:\/\/nextjs-pwa-card\.mirifqi\.my\.id\/.*$/,
+                urlPattern:
+                    /^(http:\/\/localhost:3000|https:\/\/nextjs-pwa-card\.mirifqi\.my\.id)\/.*$/,
                 handler: "NetworkFirst",
                 options: {
                     cacheName: "pages-cache",
-                    networkTimeoutSeconds: 3, // Fallback to cache if network takes longer than 3 seconds
                     expiration: {
-                        maxEntries: 100,
-                        maxAgeSeconds: 86400 * 7, // 7 days
+                        maxEntries: 50,
+                        maxAgeSeconds: 604800,
                     },
                     cacheableResponse: {
                         statuses: [0, 200],
                     },
+                    plugins: [{
+                        handlerDidError: async () => {
+                            return caches.match('/~offline');
+                        }
+                    }]
                 },
             },
         ],
