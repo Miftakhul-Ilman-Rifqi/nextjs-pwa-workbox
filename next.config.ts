@@ -9,7 +9,6 @@ const withPWA = withPWAInit({
     },
     extendDefaultRuntimeCaching: true,
     workboxOptions: {
-        navigateFallback: "/~offline",
         runtimeCaching: [
             {
                 urlPattern:
