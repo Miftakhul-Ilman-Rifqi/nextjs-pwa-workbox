@@ -9,6 +9,11 @@ const withPWA = withPWAInit({
     },
     extendDefaultRuntimeCaching: true,
     workboxOptions: {
+        navigateFallback: "/~offline",
+        additionalManifestEntries: [
+            { url: "/list-customer", revision: null },
+            { url: "/input-data-customer", revision: null },
+        ],
         runtimeCaching: [
             {
                 urlPattern:
@@ -40,13 +45,12 @@ const withPWA = withPWAInit({
             {
                 urlPattern:
                     /^(http:\/\/localhost:3000|https:\/\/nextjs-pwa-card\.mirifqi\.my\.id)\/.*$/,
-                handler: "NetworkFirst",
+                handler: "CacheFirst",
                 options: {
                     cacheName: "pages-cache",
-                    networkTimeoutSeconds: 10,
                     expiration: {
                         maxEntries: 50,
-                        maxAgeSeconds: 300,
+                        maxAgeSeconds: 604800,
                     },
                     cacheableResponse: {
                         statuses: [0, 200],
