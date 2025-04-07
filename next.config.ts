@@ -10,10 +10,6 @@ const withPWA = withPWAInit({
     extendDefaultRuntimeCaching: true,
     workboxOptions: {
         navigateFallback: "/~offline",
-        additionalManifestEntries: [
-            { url: "/list-customer", revision: null },
-            { url: "/input-data-customer", revision: null },
-        ],
         runtimeCaching: [
             {
                 urlPattern:
