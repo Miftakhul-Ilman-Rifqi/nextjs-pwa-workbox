@@ -40,9 +40,10 @@ const withPWA = withPWAInit({
             {
                 urlPattern:
                     /^(http:\/\/localhost:3000|https:\/\/nextjs-pwa-card\.mirifqi\.my\.id)\/.*$/,
-                handler: "StaleWhileRevalidate",
+                handler: "NetworkFirst",
                 options: {
                     cacheName: "pages-cache",
+                    networkTimeoutSeconds: 10,
                     expiration: {
                         maxEntries: 50,
                         maxAgeSeconds: 300,
