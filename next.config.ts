@@ -40,7 +40,7 @@ const withPWA = withPWAInit({
             {
                 urlPattern:
                     /^(http:\/\/localhost:3000|https:\/\/nextjs-pwa-card\.mirifqi\.my\.id)\/.*$/,
-                handler: "NetworkFirst", // Mengubah dari CacheFirst ke NetworkFirst
+                handler: "NetworkFirst",
                 options: {
                     cacheName: "pages-cache",
                     expiration: {
@@ -50,6 +50,14 @@ const withPWA = withPWAInit({
                     cacheableResponse: {
                         statuses: [0, 200],
                     },
+                    fetchOptions: {
+                        credentials: 'same-origin',
+                    },
+                    plugins: [{
+                        handlerDidError: async () => {
+                            return caches.match('/~offline') || Response.error();
+                        }
+                    }]
                 },
             },
         ],
