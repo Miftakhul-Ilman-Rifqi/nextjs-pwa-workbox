@@ -40,7 +40,7 @@ const withPWA = withPWAInit({
             {
                 urlPattern:
                     /^(http:\/\/localhost:3000|https:\/\/nextjs-pwa-card\.mirifqi\.my\.id)\/.*$/,
-                handler: "CacheFirst",
+                handler: "NetworkFirst", // Mengubah dari CacheFirst ke NetworkFirst
                 options: {
                     cacheName: "pages-cache",
                     expiration: {
