@@ -20,14 +20,6 @@ const withSerwist = withSerwistInit({
 const nextConfig = {
     // Tambahkan konfigurasi Next.js lain di sini jika perlu
     // Misal: images, experimental, dsb.
-    // Tambahkan konfigurasi untuk PWA
-    // output: 'standalone',
-    experimental: {
-        appDir: true,
-        // Aktifkan worker untuk PWA
-        workerThreads: true,
-        cpus: 4,
-    },
 };
 
 export default withSerwist(nextConfig);
