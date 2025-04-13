@@ -39,26 +39,10 @@ interface TotalCustomerResponse {
 }
 
 async function getTotalCustomer(): Promise<TotalCustomerResponse> {
-    try {
-        const response = await api.get<TotalCustomerResponse>(
-            "/authenticated/customer/total"
-        );
-        return response.data;
-    } catch (err) {
-        // Fallback ke cache jika offline
-        if (typeof window !== "undefined" && "caches" in window) {
-            // const cache = await caches.open("apis");
-            const cachedResp = await caches.match(
-                "/api/authenticated/customer/total"
-            );
-            // if (cachedResp) {
-            //     const data = await cachedResp.json();
-            //     return data as TotalCustomerResponse;
-            // }
-            if (cachedResp) return await cachedResp.json();
-        }
-        throw err;
-    }
+    const response = await api.get<TotalCustomerResponse>(
+        "/authenticated/customer/total"
+    );
+    return response.data;
 }
 
 export function useTotalCustomer() {
@@ -74,47 +58,7 @@ export function useTotalCustomer() {
     };
 }
 
-// // src/hooks/use-customer.ts
-// interface UseCustomersParams {
-//     search?: string;
-//     sort?: SortOption;
-//     citizenship?: CITIZENSHIP;
-//     inputDate?: string;
-// }
 
-// export function useCustomers({
-//     search,
-//     sort,
-//     citizenship,
-//     inputDate,
-// }: UseCustomersParams = {}) {
-//     const params = new URLSearchParams();
-//     if (search) params.append("search", search);
-//     if (sort) params.append("sort", sort);
-//     if (citizenship) params.append("citizenship", citizenship);
-//     if (inputDate) params.append("inputDate", inputDate);
-
-//     const queryString = params.toString();
-
-//     const { data, error, isLoading } = useSWR(
-//         `/authenticated/customer${queryString ? `?${queryString}` : ""}`,
-//         async () => {
-//             const response = await api.get<GetCustomersResponse>(
-//                 `/authenticated/customer${queryString ? `?${queryString}` : ""}`
-//             );
-
-//             return response.data;
-//         }
-//     );
-
-//     return {
-//         customers: data?.customers ?? [],
-//         // filteredTotal: data?.filteredTotal ?? 0,
-//         filteredTotal: data?.filteredTotal, // Remove default value
-//         isLoading,
-//         error,
-//     };
-// }
 interface UseCustomersParams {
     search?: string;
     sort?: SortOption;
@@ -154,28 +98,10 @@ export function useCustomers({
 
     const { data, error, size, setSize, isLoading, isValidating } =
         useSWRInfinite<GetCustomersResponse>(getKey, async (url) => {
-            try {
-                const response = await api.get<GetCustomersResponse>(url);
-                return response.data;
-            } catch (err) {
-                // Fallback ke cache jika offline
-                if (typeof window !== "undefined" && "caches" in window) {
-                    // const cache = await caches.open("apis");
-                    // url sudah berbentuk "/authenticated/customer?..."
-                    const cacheUrl = "/api" + url;
-                    const cachedResp = await caches.match(cacheUrl);
-                    // if (cachedResp) {
-                    //     const data = await cachedResp.json();
-                    //     return data as GetCustomersResponse;
-                    // }
-                    if (cachedResp) return await cachedResp.json();
-                }
-                throw err;
-            }
+            const response = await api.get<GetCustomersResponse>(url);
+            return response.data;
         });
 
-    // const customers = data ? data.flatMap((page) => page.customers) : [];
-    // Tambahkan Set untuk mengecek duplikasi
     const customers = data
         ? data
               .flatMap((page) => page.customers)
@@ -212,26 +138,10 @@ export function useCustomerDetail(customerId: string) {
     const { data, error, isLoading } = useSWR(
         `/authenticated/customer/${customerId}`,
         async () => {
-            try {
-                const response = await api.get<CustomerDetailResponse>(
-                    `/authenticated/customer/${customerId}`
-                );
-                return response.data;
-            } catch (err) {
-                // Fallback ke cache jika offline
-                if (typeof window !== "undefined" && "caches" in window) {
-                    // const cache = await caches.open("apis");
-                    const cachedResp = await caches.match(
-                        `/api/authenticated/customer/${customerId}`
-                    );
-                    // if (cachedResp) {
-                    //     const data = await cachedResp.json();
-                    //     return data as CustomerDetailResponse;
-                    // }
-                    if (cachedResp) return await cachedResp.json();
-                }
-                throw err;
-            }
+            const response = await api.get<CustomerDetailResponse>(
+                `/authenticated/customer/${customerId}`
+            );
+            return response.data;
         }
     );
 

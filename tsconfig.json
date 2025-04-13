@@ -2,7 +2,7 @@
     "$schema": "http://json.schemastore.org/tsconfig",
     "compilerOptions": {
         "target": "ES2017",
-        "lib": ["dom", "dom.iterable", "esnext", "webworker"], // Ditambahkan "webworker"
+        "lib": ["dom", "dom.iterable", "esnext"],
         "allowJs": true,
         "skipLibCheck": true,
         "strict": true,
@@ -22,9 +22,8 @@
         "paths": {
             "@/*": ["./src/*"],
             "@/prisma/*": ["./prisma/*"]
-        },
-        "types": ["@serwist/next/typings"] // Ditambahkan types untuk Serwist
+        }
     },
     "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-    "exclude": ["node_modules", "public/sw.js"] // Ditambahkan public/sw.js
+    "exclude": ["node_modules"]
 }
