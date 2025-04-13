@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { defaultCache } from "@serwist/next/worker";
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
 import { Serwist } from "serwist";
@@ -17,9 +18,12 @@ declare const self: ServiceWorkerGlobalScope;
 const customRuntimeCaching = [
     // Cache API: NetworkFirst, fallback ke cache jika offline
     {
-        matcher: ({ url }: { url: URL }) => /^\/api\//.test(url.pathname),
+        // matcher: ({ url }: { url: URL }) => /^\/api\//.test(url.pathname),
+        matcher: ({ url }: { url: URL }) =>
+            url.pathname.startsWith("/api") ||
+            url.pathname.startsWith("/_next/data"),
         handler: new NetworkFirst({
-            // tanpa cachename
+            cacheName: "api-cache",
             networkTimeoutSeconds: 5,
             plugins: [
                 new ExpirationPlugin({
@@ -32,9 +36,10 @@ const customRuntimeCaching = [
     // Cache halaman HTML: NetworkFirst, fallback ke offline.html jika offline
     {
         matcher: ({ request }: { request: Request }) =>
-            request.mode === "navigate",
+            // request.mode === "navigate",
+            request.destination === "document",
         handler: new NetworkFirst({
-            // cacheName: "html-cache",
+            cacheName: "html-cache",
             networkTimeoutSeconds: 5,
             plugins: [
                 new ExpirationPlugin({
@@ -59,29 +64,105 @@ const serwist = new Serwist({
 serwist.addEventListeners();
 
 // Fallback offline.html untuk navigasi jika offline dan tidak ada cache
+// self.addEventListener("fetch", (event: FetchEvent) => {
+//     if (event.request.mode === "navigate" && event.request.method === "GET") {
+//         event.respondWith(
+//             (async () => {
+//                 try {
+//                     // Coba fetch dari network
+//                     const preloadResp = await event.preloadResponse;
+//                     if (preloadResp) return preloadResp;
+
+//                     const networkResp = await fetch(event.request);
+//                     return networkResp;
+//                 } catch {
+//                     // Jika gagal (offline), coba dari cache
+//                     // const cache = await caches.open("pages");
+//                     const cachedResp = await caches.match(event.request);
+//                     if (cachedResp) return cachedResp;
+
+//                     // Jika tidak ada di cache, fallback ke offline.html
+//                     // const offlineCache = await caches.open("static-cache");
+//                     const offlineResp = await caches.match("/offline.html");
+//                     if (offlineResp) return offlineResp;
+
+//                     // Jika offline.html tidak ada, return Response default
+//                     return new Response("Offline", {
+//                         status: 503,
+//                         statusText: "Offline",
+//                     });
+//                 }
+//             })()
+//         );
+//     }
+// });
+// Ganti event listener fetch dengan ini:
 self.addEventListener("fetch", (event: FetchEvent) => {
-    if (event.request.mode === "navigate" && event.request.method === "GET") {
+    const url = new URL(event.request.url);
+
+    // Skip non-GET requests dan request ke Vercel analytics
+    if (event.request.method !== "GET" || url.pathname.startsWith("/_vercel")) {
+        return;
+    }
+
+    // Handle API requests
+    if (url.pathname.startsWith("/api")) {
         event.respondWith(
             (async () => {
                 try {
+                    const cache = await caches.open("api-cache");
+                    const cachedResponse = await cache.match(event.request);
+
                     // Coba fetch dari network
-                    const preloadResp = await event.preloadResponse;
-                    if (preloadResp) return preloadResp;
+                    const networkResponse = await fetch(event.request);
 
-                    const networkResp = await fetch(event.request);
-                    return networkResp;
-                } catch {
-                    // Jika gagal (offline), coba dari cache
-                    // const cache = await caches.open("pages");
-                    const cachedResp = await caches.match(event.request);
-                    if (cachedResp) return cachedResp;
+                    // Update cache jika berhasil
+                    if (networkResponse.ok) {
+                        await cache.put(event.request, networkResponse.clone());
+                    }
 
-                    // Jika tidak ada di cache, fallback ke offline.html
-                    // const offlineCache = await caches.open("static-cache");
-                    const offlineResp = await caches.match("/offline.html");
-                    if (offlineResp) return offlineResp;
+                    return networkResponse;
+                } catch (err) {
+                    // Fallback ke cache jika offline
+                    const cachedResponse = await caches.match(event.request);
+                    if (cachedResponse) return cachedResponse;
 
-                    // Jika offline.html tidak ada, return Response default
+                    return new Response(
+                        JSON.stringify({ error: "You are offline" }),
+                        {
+                            status: 503,
+                            headers: { "Content-Type": "application/json" },
+                        }
+                    );
+                }
+            })()
+        );
+        return;
+    }
+
+    // Handle navigation requests
+    if (event.request.mode === "navigate") {
+        event.respondWith(
+            (async () => {
+                try {
+                    const cache = await caches.open("html-cache");
+                    const networkResponse = await fetch(event.request);
+
+                    // Update cache jika berhasil
+                    if (networkResponse.ok) {
+                        await cache.put(event.request, networkResponse.clone());
+                    }
+
+                    return networkResponse;
+                } catch (err) {
+                    // Coba dari cache
+                    const cachedResponse = await caches.match(event.request);
+                    if (cachedResponse) return cachedResponse;
+
+                    // Fallback ke offline.html
+                    const offlineResponse = await caches.match("/offline.html");
+                    if (offlineResponse) return offlineResponse;
+
                     return new Response("Offline", {
                         status: 503,
                         statusText: "Offline",
@@ -89,5 +170,13 @@ self.addEventListener("fetch", (event: FetchEvent) => {
                 }
             })()
         );
+        return;
     }
+
+    // Default behavior untuk asset lainnya
+    event.respondWith(
+        caches.match(event.request).then((response) => {
+            return response || fetch(event.request);
+        })
+    );
 });

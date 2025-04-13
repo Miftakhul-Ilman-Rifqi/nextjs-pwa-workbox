@@ -8,15 +8,26 @@ import withSerwistInit from "@serwist/next";
  * - reloadOnOnline: true (reload halaman saat online)
  */
 const withSerwist = withSerwistInit({
-  swSrc: "src/app/sw.ts",
-  swDest: "public/sw.js",
-  register: true,
-  reloadOnOnline: true,
+    swSrc: "src/app/sw.ts",
+    swDest: "public/sw.js",
+    register: true,
+    reloadOnOnline: true,
+    // Tambahkan scope dan basePath untuk Vercel
+    scope: "/",
+    swUrl: "/sw.js",
 });
 
 const nextConfig = {
-  // Tambahkan konfigurasi Next.js lain di sini jika perlu
-  // Misal: images, experimental, dsb.
+    // Tambahkan konfigurasi Next.js lain di sini jika perlu
+    // Misal: images, experimental, dsb.
+    // Tambahkan konfigurasi untuk PWA
+    // output: 'standalone',
+    experimental: {
+        appDir: true,
+        // Aktifkan worker untuk PWA
+        workerThreads: true,
+        cpus: 4,
+    },
 };
 
 export default withSerwist(nextConfig);
