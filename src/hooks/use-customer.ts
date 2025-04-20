@@ -39,10 +39,25 @@ interface TotalCustomerResponse {
 }
 
 async function getTotalCustomer(): Promise<TotalCustomerResponse> {
-    const response = await api.get<TotalCustomerResponse>(
-        "/authenticated/customer/total"
-    );
-    return response.data;
+    try {
+        const response = await api.get<TotalCustomerResponse>(
+            "/authenticated/customer/total"
+        );
+        return response.data;
+    } catch (err) {
+        // Fallback ke cache jika offline
+        if (typeof window !== "undefined" && "caches" in window) {
+            const cache = await caches.open("apis");
+            const cachedResp = await cache.match(
+                "/api/authenticated/customer/total"
+            );
+            if (cachedResp) {
+                const data = await cachedResp.json();
+                return data as TotalCustomerResponse;
+            }
+        }
+        throw err;
+    }
 }
 
 export function useTotalCustomer() {
@@ -57,7 +72,6 @@ export function useTotalCustomer() {
         error,
     };
 }
-
 
 interface UseCustomersParams {
     search?: string;
@@ -98,8 +112,23 @@ export function useCustomers({
 
     const { data, error, size, setSize, isLoading, isValidating } =
         useSWRInfinite<GetCustomersResponse>(getKey, async (url) => {
-            const response = await api.get<GetCustomersResponse>(url);
-            return response.data;
+            try {
+                const response = await api.get<GetCustomersResponse>(url);
+                return response.data;
+            } catch (err) {
+                // Fallback ke cache jika offline
+                if (typeof window !== "undefined" && "caches" in window) {
+                    const cache = await caches.open("apis");
+                    // url sudah berbentuk "/authenticated/customer?..."
+                    const cacheUrl = "/api" + url;
+                    const cachedResp = await cache.match(cacheUrl);
+                    if (cachedResp) {
+                        const data = await cachedResp.json();
+                        return data as GetCustomersResponse;
+                    }
+                }
+                throw err;
+            }
         });
 
     const customers = data
@@ -138,10 +167,25 @@ export function useCustomerDetail(customerId: string) {
     const { data, error, isLoading } = useSWR(
         `/authenticated/customer/${customerId}`,
         async () => {
-            const response = await api.get<CustomerDetailResponse>(
-                `/authenticated/customer/${customerId}`
-            );
-            return response.data;
+            try {
+                const response = await api.get<CustomerDetailResponse>(
+                    `/authenticated/customer/${customerId}`
+                );
+                return response.data;
+            } catch (err) {
+                // Fallback ke cache jika offline
+                if (typeof window !== "undefined" && "caches" in window) {
+                    const cache = await caches.open("apis");
+                    const cachedResp = await cache.match(
+                        `/api/authenticated/customer/${customerId}`
+                    );
+                    if (cachedResp) {
+                        const data = await cachedResp.json();
+                        return data as CustomerDetailResponse;
+                    }
+                }
+                throw err;
+            }
         }
     );
 
