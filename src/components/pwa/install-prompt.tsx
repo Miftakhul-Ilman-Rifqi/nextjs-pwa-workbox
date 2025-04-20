@@ -1,83 +1,17 @@
-// // src/components/pwa/install-prompt.tsx
-// "use client";
-
-// import { useEffect, useState } from "react";
-// import { Button } from "../ui/button";
-
-// interface BeforeInstallPromptEvent extends Event {
-//     readonly platforms: string[];
-//     readonly userChoice: Promise<{
-//         outcome: "accepted" | "dismissed";
-//         platform: string;
-//     }>;
-//     prompt(): Promise<void>;
-// }
-
-// export function InstallPWA() {
-//     const [deferredPrompt, setDeferredPrompt] =
-//         useState<BeforeInstallPromptEvent | null>(null);
-//     const [isPWA, setIsPWA] = useState(false);
-//     const [showButton, setShowButton] = useState(false);
-
-//     useEffect(() => {
-//         // Cek apakah sudah di-install sebagai PWA
-//         const checkPWA = () => {
-//             setIsPWA(window.matchMedia("(display-mode: standalone)").matches);
-//         };
-
-//         checkPWA();
-
-//         const handler = (e: Event) => {
-//             e.preventDefault();
-//             setDeferredPrompt(e as BeforeInstallPromptEvent);
-//             setShowButton(true);
-//         };
-
-//         window.addEventListener("beforeinstallprompt", handler);
-//         window
-//             .matchMedia("(display-mode: standalone)")
-//             .addEventListener("change", checkPWA);
-
-//         return () => {
-//             window.removeEventListener("beforeinstallprompt", handler);
-//             window
-//                 .matchMedia("(display-mode: standalone)")
-//                 .removeEventListener("change", checkPWA);
-//         };
-//     }, []);
-
-//     if (isPWA) {
-//         return (
-//             <div className="fixed bottom-4 right-4  p-2 rounded-md text-sm">
-//                 Aplikasi sudah terinstall
-//             </div>
-//         );
-//     }
-
-//     if (!showButton) return null;
-
-//     return (
-//         <Button
-//             onClick={async () => {
-//                 if (deferredPrompt) {
-//                     await deferredPrompt.prompt();
-//                     const { outcome } = await deferredPrompt.userChoice;
-//                     if (outcome === "accepted") {
-//                         setShowButton(false);
-//                     }
-//                 }
-//             }}
-//             className="fixed bottom-4 right-4"
-//         >
-//             Install Aplikasi
-//         </Button>
-//     );
-// }
-
 "use client";
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+
+declare global {
+    interface Navigator {
+        standalone?: boolean;
+    }
+
+    interface WindowEventMap {
+        beforeinstallprompt: BeforeInstallPromptEvent;
+    }
+}
 
 interface BeforeInstallPromptEvent extends Event {
     readonly platforms: string[];
@@ -92,43 +26,65 @@ export function InstallPWA() {
     const [deferredPrompt, setDeferredPrompt] =
         useState<BeforeInstallPromptEvent | null>(null);
     const [isPWA, setIsPWA] = useState(false);
-    const [showPrompt, setShowPrompt] = useState(false);
+    const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
-        // Cek apakah sudah di-install sebagai PWA
         const checkPWA = () => {
-            setIsPWA(window.matchMedia("(display-mode: standalone)").matches);
+            setIsPWA(
+                window.matchMedia("(display-mode: standalone)").matches ||
+                    // Gunakan optional chaining untuk navigator.standalone
+                    (window.navigator.standalone ?? false) ||
+                    document.referrer.includes("android-app://")
+            );
         };
 
         checkPWA();
 
-        const handler = (e: Event) => {
+        const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
             e.preventDefault();
-            setDeferredPrompt(e as BeforeInstallPromptEvent);
-            // Tunda munculnya prompt selama 2 detik
-            setTimeout(() => {
-                setShowPrompt(true);
-            }, 2000);
+            setDeferredPrompt(e);
+            setIsVisible(true); // Tampilkan prompt segera tanpa delay
         };
 
-        window.addEventListener("beforeinstallprompt", handler);
+        window.addEventListener(
+            "beforeinstallprompt",
+            handleBeforeInstallPrompt
+        );
         window
             .matchMedia("(display-mode: standalone)")
             .addEventListener("change", checkPWA);
 
         return () => {
-            window.removeEventListener("beforeinstallprompt", handler);
+            window.removeEventListener(
+                "beforeinstallprompt",
+                handleBeforeInstallPrompt
+            );
             window
                 .matchMedia("(display-mode: standalone)")
                 .removeEventListener("change", checkPWA);
         };
     }, []);
 
-    // Jika sudah terinstall, bisa tampilkan notifikasi sebentar lalu hilang
-    if (isPWA) return null;
+    const handleInstall = async () => {
+        if (!deferredPrompt) return;
 
-    // Jika belum muncul prompt, tidak tampilkan apa-apa
-    if (!showPrompt) return null;
+        try {
+            await deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+
+            if (outcome === "accepted") {
+                console.log("User accepted the install prompt");
+            }
+
+            // Reset deferred prompt
+            setDeferredPrompt(null);
+            setIsVisible(false);
+        } catch (error) {
+            console.error("Error showing install prompt:", error);
+        }
+    };
+
+    if (isPWA || !isVisible) return null;
 
     return (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
@@ -142,23 +98,11 @@ export function InstallPWA() {
                     <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setShowPrompt(false)}
+                        onClick={() => setIsVisible(false)}
                     >
                         Nanti
                     </Button>
-                    <Button
-                        size="sm"
-                        onClick={async () => {
-                            if (deferredPrompt) {
-                                await deferredPrompt.prompt();
-                                const { outcome } =
-                                    await deferredPrompt.userChoice;
-                                if (outcome === "accepted") {
-                                    setShowPrompt(false);
-                                }
-                            }
-                        }}
-                    >
+                    <Button size="sm" onClick={handleInstall}>
                         Install
                     </Button>
                 </div>
