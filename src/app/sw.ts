@@ -31,4 +31,22 @@ const serwist = new Serwist({
     },
 });
 
+// Tambahkan event listener untuk auto reload
+self.addEventListener("message", (event) => {
+    if (event.data === "skipWaiting") {
+        self.skipWaiting();
+    }
+});
+
 serwist.addEventListeners();
+
+// Auto reload saat online
+self.addEventListener("activate", () => {
+    self.clients.claim().then(() => {
+        self.clients.matchAll().then((clients) => {
+            clients.forEach((client) => {
+                client.postMessage({ type: "WINDOW_RELOAD" });
+            });
+        });
+    });
+});

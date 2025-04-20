@@ -11,7 +11,15 @@ const withSerwist = withSerwistInit({
     swSrc: "src/app/sw.ts",
     swDest: "public/sw.js",
     reloadOnOnline: true,
-    additionalPrecacheEntries: [{ url: "/~offline", revision }],
+    additionalPrecacheEntries: [
+        { url: "/~offline", revision },
+        { url: "/favicon/android-chrome-512x512.png", revision },
+        { url: "/favicon/android-chrome-192x192.png", revision },
+        { url: "/favicon/apple-touch-icon.png", revision },
+        { url: "/favicon/favicon-16x16.png", revision },
+        { url: "/favicon/favicon-32x32.png", revision },
+        { url: "/favicon/favicon.ico", revision },
+    ],
 });
 
 /** @type {import("next").NextConfig} */
