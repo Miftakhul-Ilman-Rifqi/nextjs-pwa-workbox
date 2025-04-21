@@ -11,10 +11,7 @@ const withSerwist = withSerwistInit({
     swSrc: "src/app/sw.ts",
     swDest: "public/sw.js",
     reloadOnOnline: true,
-    additionalPrecacheEntries: [
-        { url: "/~offline", revision },
-        { url: "/favicon", revision },
-    ],
+    additionalPrecacheEntries: [{ url: "/~offline", revision }],
 });
 
 /** @type {import("next").NextConfig} */
