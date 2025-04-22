@@ -33,6 +33,9 @@
 // }
 
 "use client";
+
+import PWAHandler from "../../components/common/pwa-handler";
+
 /* eslint-disable @next/next/no-img-element */
 export default function OfflinePage() {
     const handleRetry = () => {
@@ -64,6 +67,7 @@ export default function OfflinePage() {
                 >
                     Try Again
                 </button>
+                <PWAHandler />
             </div>
         </div>
     );

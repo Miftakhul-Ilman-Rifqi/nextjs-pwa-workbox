@@ -3,7 +3,7 @@ import {
     CacheFirst,
     NetworkFirst,
     Serwist,
-    StaleWhileRevalidate,
+    // StaleWhileRevalidate,
 } from "serwist";
 
 declare global {
@@ -33,19 +33,19 @@ const serwist = new Serwist({
         },
         // Cache favicon asli (fallback)
         // Cache gambar favicon dan aset statis dengan CacheFirst
-        // {
-        //     matcher: ({ request }) =>
-        //         request.destination === "image" ||
-        //         request.url.includes("/favicon/"),
-        //     handler: new CacheFirst({
-        //         cacheName: "images",
-        //     }),
-        // },
+        {
+            matcher: ({ request }) =>
+                request.destination === "image" ||
+                request.url.includes("/favicon/"),
+            handler: new CacheFirst({
+                cacheName: "images",
+            }),
+        },
 
         // Cache dokumen HTML dengan NetworkFirst
         {
             matcher: ({ request }) => request.destination === "document",
-            handler: new StaleWhileRevalidate({
+            handler: new CacheFirst({
                 cacheName: "documents",
             }),
         },
@@ -66,27 +66,6 @@ const serwist = new Serwist({
                         },
                     },
                 ],
-            }),
-        },
-        // Cache static assets from _next
-        {
-            matcher: ({ url }) => url.pathname.startsWith("/_next/static/"),
-            handler: new CacheFirst({
-                cacheName: "next-static",
-            }),
-        },
-        // Cache JavaScript dengan StaleWhileRevalidate
-        {
-            matcher: ({ request }) => request.destination === "script",
-            handler: new StaleWhileRevalidate({
-                cacheName: "scripts",
-            }),
-        },
-        // Cache CSS dengan StaleWhileRevalidate
-        {
-            matcher: ({ request }) => request.destination === "style",
-            handler: new StaleWhileRevalidate({
-                cacheName: "styles",
             }),
         },
     ],
