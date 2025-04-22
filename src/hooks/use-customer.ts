@@ -47,7 +47,7 @@ async function getTotalCustomer(): Promise<TotalCustomerResponse> {
     } catch (err) {
         // Fallback ke cache jika offline
         if (typeof window !== "undefined" && "caches" in window) {
-            const cache = await caches.open("api-responses");
+            const cache = await caches.open("apis");
             const cachedResp = await cache.match(
                 "/api/authenticated/customer/total"
             );
@@ -118,7 +118,7 @@ export function useCustomers({
             } catch (err) {
                 // Fallback ke cache jika offline
                 if (typeof window !== "undefined" && "caches" in window) {
-                    const cache = await caches.open("api-responses");
+                    const cache = await caches.open("apis");
                     // url sudah berbentuk "/authenticated/customer?..."
                     const cacheUrl = "/api" + url;
                     const cachedResp = await cache.match(cacheUrl);
@@ -175,7 +175,7 @@ export function useCustomerDetail(customerId: string) {
             } catch (err) {
                 // Fallback ke cache jika offline
                 if (typeof window !== "undefined" && "caches" in window) {
-                    const cache = await caches.open("api-responses");
+                    const cache = await caches.open("apis");
                     const cachedResp = await cache.match(
                         `/api/authenticated/customer/${customerId}`
                     );

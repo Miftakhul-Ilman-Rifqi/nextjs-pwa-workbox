@@ -38,8 +38,6 @@ self.addEventListener("message", (event) => {
     }
 });
 
-serwist.addEventListeners();
-
 // Auto reload saat online
 self.addEventListener("activate", () => {
     self.clients.claim().then(() => {
@@ -50,3 +48,5 @@ self.addEventListener("activate", () => {
         });
     });
 });
+
+serwist.addEventListeners();
