@@ -1,5 +1,3 @@
-"use client";
-/* eslint-disable @next/next/no-img-element */
 // export default function OfflinePage() {
 //     return (
 //         <div className="flex min-h-screen flex-col items-center justify-center p-4">
@@ -34,6 +32,8 @@
 //     );
 // }
 
+"use client";
+/* eslint-disable @next/next/no-img-element */
 export default function OfflinePage() {
     const handleRetry = () => {
         if (navigator.onLine) {

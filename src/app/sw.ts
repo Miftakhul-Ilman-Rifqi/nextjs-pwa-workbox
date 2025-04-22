@@ -3,7 +3,7 @@ import {
     CacheFirst,
     NetworkFirst,
     Serwist,
-    // StaleWhileRevalidate,
+    StaleWhileRevalidate,
 } from "serwist";
 
 declare global {
@@ -28,7 +28,7 @@ const serwist = new Serwist({
             matcher: ({ url }) => url.pathname.startsWith("/api/"),
             handler: new NetworkFirst({
                 cacheName: "api-responses",
-                networkTimeoutSeconds: 10,
+                networkTimeoutSeconds: 3,
             }),
         },
         // Cache favicon asli (fallback)
@@ -45,7 +45,7 @@ const serwist = new Serwist({
         // Cache dokumen HTML dengan NetworkFirst
         {
             matcher: ({ request }) => request.destination === "document",
-            handler: new NetworkFirst({
+            handler: new StaleWhileRevalidate({
                 cacheName: "documents",
             }),
         },
@@ -68,7 +68,29 @@ const serwist = new Serwist({
                 ],
             }),
         },
+        // Cache static assets from _next
+        {
+            matcher: ({ url }) => url.pathname.startsWith("/_next/static/"),
+            handler: new CacheFirst({
+                cacheName: "next-static",
+            }),
+        },
+        // Cache JavaScript dengan StaleWhileRevalidate
+        {
+            matcher: ({ request }) => request.destination === "script",
+            handler: new StaleWhileRevalidate({
+                cacheName: "scripts",
+            }),
+        },
+        // Cache CSS dengan StaleWhileRevalidate
+        {
+            matcher: ({ request }) => request.destination === "style",
+            handler: new StaleWhileRevalidate({
+                cacheName: "styles",
+            }),
+        },
     ],
+
     fallbacks: {
         entries: [
             {
@@ -88,6 +110,15 @@ self.addEventListener("activate", () => {
             clients.forEach((client) => {
                 client.postMessage({ type: "WINDOW_RELOAD" });
             });
+        });
+    });
+});
+
+// Auto reload when connection is restored
+self.addEventListener("online", () => {
+    self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => {
+            client.postMessage({ type: "ONLINE_RECONNECTED" });
         });
     });
 });
