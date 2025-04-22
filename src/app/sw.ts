@@ -3,7 +3,7 @@ import {
     CacheFirst,
     NetworkFirst,
     Serwist,
-    StaleWhileRevalidate,
+    // StaleWhileRevalidate,
 } from "serwist";
 
 declare global {
@@ -68,15 +68,15 @@ const serwist = new Serwist({
             }),
         },
         // Cache aset lainnya (CSS, JS, font) dengan StaleWhileRevalidate
-        {
-            matcher: ({ request }) =>
-                request.destination === "style" ||
-                request.destination === "script" ||
-                request.destination === "font",
-            handler: new StaleWhileRevalidate({
-                cacheName: "assets",
-            }),
-        },
+        // {
+        //     matcher: ({ request }) =>
+        //         request.destination === "style" ||
+        //         request.destination === "script" ||
+        //         request.destination === "font",
+        //     handler: new StaleWhileRevalidate({
+        //         cacheName: "assets",
+        //     }),
+        // },
     ],
     fallbacks: {
         entries: [
@@ -90,12 +90,12 @@ const serwist = new Serwist({
     },
 });
 
-// // Tambahkan event listener untuk auto reload
-// self.addEventListener("message", (event) => {
-//     if (event.data === "skipWaiting") {
-//         self.skipWaiting();
-//     }
-// });
+// Tambahkan event listener untuk auto reload
+self.addEventListener("message", (event) => {
+    if (event.data === "skipWaiting") {
+        self.skipWaiting();
+    }
+});
 
 serwist.addEventListeners();
 

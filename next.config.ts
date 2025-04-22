@@ -15,10 +15,7 @@ const withSerwist = withSerwistInit({
         { url: "/~offline", revision: "1" },
         { url: "/manifest.json", revision: "1" },
         // Precache URL optimized image
-        {
-            url: "/_next/image?url=%2Ffavicon%2Fandroid-chrome-512x512.png&w=96&q=75",
-            revision: "1",
-        },
+        // { url: "/favicon/android-chrome-512x512.png", revision: "1" },
     ],
 });
 
