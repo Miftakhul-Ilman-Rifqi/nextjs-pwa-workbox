@@ -33,22 +33,22 @@ const serwist = new Serwist({
         },
         // Cache favicon asli (fallback)
         // Cache gambar favicon dan aset statis dengan CacheFirst
-        {
-            matcher: ({ request }) =>
-                request.destination === "image" ||
-                request.url.includes("/favicon/"),
-            handler: new CacheFirst({
-                cacheName: "images",
-            }),
-        },
+        // {
+        //     matcher: ({ request }) =>
+        //         request.destination === "image" ||
+        //         request.url.includes("/favicon/"),
+        //     handler: new CacheFirst({
+        //         cacheName: "images",
+        //     }),
+        // },
 
-        // Cache dokumen HTML dengan NetworkFirst
-        {
-            matcher: ({ request }) => request.destination === "document",
-            handler: new StaleWhileRevalidate({
-                cacheName: "documents",
-            }),
-        },
+        // // Cache dokumen HTML dengan NetworkFirst
+        // {
+        //     matcher: ({ request }) => request.destination === "document",
+        //     handler: new StaleWhileRevalidate({
+        //         cacheName: "documents",
+        //     }),
+        // },
         // Cache Next.js optimized images
         {
             matcher: ({ url }) =>
