@@ -42,13 +42,13 @@ const serwist = new Serwist({
         //     }),
         // },
 
-        // // Cache dokumen HTML dengan NetworkFirst
-        // {
-        //     matcher: ({ request }) => request.destination === "document",
-        //     handler: new StaleWhileRevalidate({
-        //         cacheName: "documents",
-        //     }),
-        // },
+        // Cache dokumen HTML dengan NetworkFirst
+        {
+            matcher: ({ request }) => request.destination === "document",
+            handler: new StaleWhileRevalidate({
+                cacheName: "documents",
+            }),
+        },
         // Cache Next.js optimized images
         {
             matcher: ({ url }) =>
