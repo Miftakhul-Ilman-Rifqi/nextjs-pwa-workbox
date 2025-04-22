@@ -3,7 +3,7 @@ import {
     CacheFirst,
     NetworkFirst,
     Serwist,
-    StaleWhileRevalidate,
+    // StaleWhileRevalidate,
 } from "serwist";
 
 declare global {
@@ -23,15 +23,35 @@ const serwist = new Serwist({
     clientsClaim: true,
     navigationPreload: true,
     runtimeCaching: [
-        // Cache gambar favicon dan aset statis dengan CacheFirst
+        // Cache Next.js optimized images
         {
-            matcher: ({ request }) =>
-                request.destination === "image" ||
-                request.url.includes("/favicon/"),
+            matcher: ({ url }) =>
+                url.pathname.startsWith("/_next/image") &&
+                url.searchParams.has("url"),
             handler: new CacheFirst({
-                cacheName: "images",
+                cacheName: "next-images",
+                plugins: [
+                    {
+                        cacheKeyWillBeUsed: ({ request }) => {
+                            // Normalize URL untuk menghindari duplikasi cache
+                            const url = new URL(request.url);
+                            const imageUrl = url.searchParams.get("url");
+                            return `${url.origin}${imageUrl}`;
+                        },
+                    },
+                ],
             }),
         },
+        // Cache favicon asli (fallback)
+        // Cache gambar favicon dan aset statis dengan CacheFirst
+        // {
+        //     matcher: ({ request }) =>
+        //         request.destination === "image" ||
+        //         request.url.includes("/favicon/"),
+        //     handler: new CacheFirst({
+        //         cacheName: "images",
+        //     }),
+        // },
         // Cache API dengan NetworkFirst untuk offline support
         {
             matcher: ({ url }) => url.pathname.startsWith("/api/"),
@@ -40,23 +60,23 @@ const serwist = new Serwist({
                 networkTimeoutSeconds: 10,
             }),
         },
-        // Cache dokumen HTML dengan NetworkFirst
-        {
-            matcher: ({ request }) => request.destination === "document",
-            handler: new NetworkFirst({
-                cacheName: "documents",
-            }),
-        },
-        // Cache aset lainnya (CSS, JS, font) dengan StaleWhileRevalidate
-        {
-            matcher: ({ request }) =>
-                request.destination === "style" ||
-                request.destination === "script" ||
-                request.destination === "font",
-            handler: new StaleWhileRevalidate({
-                cacheName: "assets",
-            }),
-        },
+        // // Cache dokumen HTML dengan NetworkFirst
+        // {
+        //     matcher: ({ request }) => request.destination === "document",
+        //     handler: new NetworkFirst({
+        //         cacheName: "documents",
+        //     }),
+        // },
+        // // Cache aset lainnya (CSS, JS, font) dengan StaleWhileRevalidate
+        // {
+        //     matcher: ({ request }) =>
+        //         request.destination === "style" ||
+        //         request.destination === "script" ||
+        //         request.destination === "font",
+        //     handler: new StaleWhileRevalidate({
+        //         cacheName: "assets",
+        //     }),
+        // },
     ],
     fallbacks: {
         entries: [
@@ -79,13 +99,13 @@ self.addEventListener("message", (event) => {
 
 serwist.addEventListeners();
 
-// // Auto reload saat online
-// self.addEventListener("activate", () => {
-//     self.clients.claim().then(() => {
-//         self.clients.matchAll().then((clients) => {
-//             clients.forEach((client) => {
-//                 client.postMessage({ type: "WINDOW_RELOAD" });
-//             });
-//         });
-//     });
-// });
+// Auto reload saat online
+self.addEventListener("activate", () => {
+    self.clients.claim().then(() => {
+        self.clients.matchAll().then((clients) => {
+            clients.forEach((client) => {
+                client.postMessage({ type: "WINDOW_RELOAD" });
+            });
+        });
+    });
+});

@@ -12,9 +12,13 @@ const withSerwist = withSerwistInit({
     reloadOnOnline: true,
     register: true,
     additionalPrecacheEntries: [
-        { url: "/~offline", revision: crypto.randomUUID() },
-        { url: "/favicon/android-chrome-512x512.png", revision: "1" }, // Versi bisa disesuaikan
-        { url: "/favicon/android-chrome-192x192.png", revision: "1" },
+        { url: "/~offline", revision: "1" },
+        { url: "/manifest.json", revision: "1" },
+        // Precache URL optimized image
+        {
+            url: "/_next/image?url=%2Ffavicon%2Fandroid-chrome-512x512.png&w=96&q=75",
+            revision: "1",
+        },
     ],
 });
 
