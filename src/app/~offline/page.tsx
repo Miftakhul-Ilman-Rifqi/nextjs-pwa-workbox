@@ -34,22 +34,35 @@
 // }
 
 export default function OfflinePage() {
+    const handleRetry = () => {
+        if (navigator.onLine) {
+            window.location.reload();
+        } else {
+            alert("You are still offline. Please check your connection.");
+        }
+    };
+
     return (
         <div className="flex h-screen w-full items-center justify-center">
             <div className="text-center space-y-4">
                 <div className="flex justify-center">
-                    {/* Menggunakan tag img biasa */}
                     <img
                         src="/favicon/android-chrome-512x512.png"
                         alt="Offline Icon"
                         width={96}
                         height={96}
                         className="opacity-80"
-                        loading="eager" // Memastikan gambar di-load segera
+                        loading="eager"
                     />
                 </div>
                 <h1 className="text-2xl font-bold">You are offline</h1>
                 <p className="mt-2">Please check your internet connection</p>
+                <button
+                    onClick={handleRetry}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                >
+                    Try Again
+                </button>
             </div>
         </div>
     );

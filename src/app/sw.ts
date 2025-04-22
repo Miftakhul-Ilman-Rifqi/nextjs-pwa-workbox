@@ -23,6 +23,28 @@ const serwist = new Serwist({
     clientsClaim: true,
     navigationPreload: true,
     runtimeCaching: [
+        // Cache halaman yang dikunjungi dengan NetworkFirst
+        {
+            matcher: ({ request, sameOrigin }) =>
+                sameOrigin &&
+                request.destination === "document" &&
+                !request.url.includes("/api/"),
+            handler: new NetworkFirst({
+                cacheName: "pages",
+                networkTimeoutSeconds: 3,
+                plugins: [
+                    {
+                        cacheWillUpdate: ({ response }) => {
+                            // Hanya cache response 200 dan opaque response
+                            return response.status === 200 ||
+                                response.type === "opaque"
+                                ? response
+                                : null;
+                        },
+                    },
+                ],
+            }),
+        },
         // Cache Next.js optimized images
         {
             matcher: ({ url }) =>
@@ -97,8 +119,6 @@ self.addEventListener("message", (event) => {
     }
 });
 
-serwist.addEventListeners();
-
 // Auto reload saat online
 self.addEventListener("activate", () => {
     self.clients.claim().then(() => {
@@ -109,3 +129,26 @@ self.addEventListener("activate", () => {
         });
     });
 });
+
+// Auto reload saat online kembali
+self.addEventListener("online", () => {
+    self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => {
+            client.postMessage({
+                type: "NETWORK_RECONNECTED",
+                message: "Connection restored",
+            });
+        });
+    });
+});
+
+// Di client side (buat file baru src/utils/network-listener.ts)
+if (typeof window !== "undefined") {
+    navigator.serviceWorker?.addEventListener("message", (event) => {
+        if (event.data.type === "NETWORK_RECONNECTED") {
+            window.location.reload();
+        }
+    });
+}
+
+serwist.addEventListeners();
