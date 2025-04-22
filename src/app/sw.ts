@@ -3,7 +3,7 @@ import {
     CacheFirst,
     NetworkFirst,
     Serwist,
-    // StaleWhileRevalidate,
+    StaleWhileRevalidate,
 } from "serwist";
 
 declare global {
@@ -44,14 +44,14 @@ const serwist = new Serwist({
         },
         // Cache favicon asli (fallback)
         // Cache gambar favicon dan aset statis dengan CacheFirst
-        // {
-        //     matcher: ({ request }) =>
-        //         request.destination === "image" ||
-        //         request.url.includes("/favicon/"),
-        //     handler: new CacheFirst({
-        //         cacheName: "images",
-        //     }),
-        // },
+        {
+            matcher: ({ request }) =>
+                request.destination === "image" ||
+                request.url.includes("/favicon/"),
+            handler: new CacheFirst({
+                cacheName: "images",
+            }),
+        },
         // Cache API dengan NetworkFirst untuk offline support
         {
             matcher: ({ url }) => url.pathname.startsWith("/api/"),
@@ -60,23 +60,23 @@ const serwist = new Serwist({
                 networkTimeoutSeconds: 10,
             }),
         },
-        // // Cache dokumen HTML dengan NetworkFirst
-        // {
-        //     matcher: ({ request }) => request.destination === "document",
-        //     handler: new NetworkFirst({
-        //         cacheName: "documents",
-        //     }),
-        // },
-        // // Cache aset lainnya (CSS, JS, font) dengan StaleWhileRevalidate
-        // {
-        //     matcher: ({ request }) =>
-        //         request.destination === "style" ||
-        //         request.destination === "script" ||
-        //         request.destination === "font",
-        //     handler: new StaleWhileRevalidate({
-        //         cacheName: "assets",
-        //     }),
-        // },
+        // Cache dokumen HTML dengan NetworkFirst
+        {
+            matcher: ({ request }) => request.destination === "document",
+            handler: new NetworkFirst({
+                cacheName: "documents",
+            }),
+        },
+        // Cache aset lainnya (CSS, JS, font) dengan StaleWhileRevalidate
+        {
+            matcher: ({ request }) =>
+                request.destination === "style" ||
+                request.destination === "script" ||
+                request.destination === "font",
+            handler: new StaleWhileRevalidate({
+                cacheName: "assets",
+            }),
+        },
     ],
     fallbacks: {
         entries: [
@@ -90,12 +90,12 @@ const serwist = new Serwist({
     },
 });
 
-// Tambahkan event listener untuk auto reload
-self.addEventListener("message", (event) => {
-    if (event.data === "skipWaiting") {
-        self.skipWaiting();
-    }
-});
+// // Tambahkan event listener untuk auto reload
+// self.addEventListener("message", (event) => {
+//     if (event.data === "skipWaiting") {
+//         self.skipWaiting();
+//     }
+// });
 
 serwist.addEventListeners();
 
