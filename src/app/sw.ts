@@ -1,6 +1,10 @@
-import { defaultCache } from "@serwist/next/worker";
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
-import { Serwist } from "serwist";
+import {
+    CacheFirst,
+    NetworkFirst,
+    Serwist,
+    StaleWhileRevalidate,
+} from "serwist";
 
 declare global {
     interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -18,7 +22,42 @@ const serwist = new Serwist({
     skipWaiting: true,
     clientsClaim: true,
     navigationPreload: true,
-    runtimeCaching: defaultCache,
+    runtimeCaching: [
+        // Cache gambar favicon dan aset statis dengan CacheFirst
+        {
+            matcher: ({ request }) =>
+                request.destination === "image" ||
+                request.url.includes("/favicon/"),
+            handler: new CacheFirst({
+                cacheName: "images",
+            }),
+        },
+        // Cache API dengan NetworkFirst untuk offline support
+        {
+            matcher: ({ url }) => url.pathname.startsWith("/api/"),
+            handler: new NetworkFirst({
+                cacheName: "api-responses",
+                networkTimeoutSeconds: 10,
+            }),
+        },
+        // Cache dokumen HTML dengan NetworkFirst
+        {
+            matcher: ({ request }) => request.destination === "document",
+            handler: new NetworkFirst({
+                cacheName: "documents",
+            }),
+        },
+        // Cache aset lainnya (CSS, JS, font) dengan StaleWhileRevalidate
+        {
+            matcher: ({ request }) =>
+                request.destination === "style" ||
+                request.destination === "script" ||
+                request.destination === "font",
+            handler: new StaleWhileRevalidate({
+                cacheName: "assets",
+            }),
+        },
+    ],
     fallbacks: {
         entries: [
             {
@@ -40,13 +79,13 @@ self.addEventListener("message", (event) => {
 
 serwist.addEventListeners();
 
-// Auto reload saat online
-self.addEventListener("activate", () => {
-    self.clients.claim().then(() => {
-        self.clients.matchAll().then((clients) => {
-            clients.forEach((client) => {
-                client.postMessage({ type: "WINDOW_RELOAD" });
-            });
-        });
-    });
-});
+// // Auto reload saat online
+// self.addEventListener("activate", () => {
+//     self.clients.claim().then(() => {
+//         self.clients.matchAll().then((clients) => {
+//             clients.forEach((client) => {
+//                 client.postMessage({ type: "WINDOW_RELOAD" });
+//             });
+//         });
+//     });
+// });

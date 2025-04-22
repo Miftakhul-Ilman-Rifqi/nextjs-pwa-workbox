@@ -4,7 +4,6 @@ import withSerwistInit from "@serwist/next";
 // You may want to use a more robust revision to cache
 // files more efficiently.
 // A viable option is `git rev-parse HEAD`.
-const revision = crypto.randomUUID();
 
 const withSerwist = withSerwistInit({
     cacheOnNavigation: true,
@@ -12,7 +11,11 @@ const withSerwist = withSerwistInit({
     swDest: "public/sw.js",
     reloadOnOnline: true,
     register: true,
-    additionalPrecacheEntries: [{ url: "/~offline", revision }],
+    additionalPrecacheEntries: [
+        { url: "/~offline", revision: crypto.randomUUID() },
+        { url: "/favicon/android-chrome-512x512.png", revision: "1" }, // Versi bisa disesuaikan
+        { url: "/favicon/android-chrome-192x192.png", revision: "1" },
+    ],
 });
 
 /** @type {import("next").NextConfig} */
