@@ -23,26 +23,30 @@ const serwist = new Serwist({
     clientsClaim: true,
     navigationPreload: true,
     runtimeCaching: [
-        // Cache halaman yang dikunjungi dengan NetworkFirst
+        // Cache API dengan NetworkFirst untuk offline support
         {
-            matcher: ({ request, sameOrigin }) =>
-                sameOrigin &&
-                request.destination === "document" &&
-                !request.url.includes("/api/"),
+            matcher: ({ url }) => url.pathname.startsWith("/api/"),
             handler: new NetworkFirst({
-                cacheName: "pages",
-                networkTimeoutSeconds: 3,
-                plugins: [
-                    {
-                        cacheWillUpdate: ({ response }) => {
-                            // Hanya cache response 200 dan opaque response
-                            return response.status === 200 ||
-                                response.type === "opaque"
-                                ? response
-                                : null;
-                        },
-                    },
-                ],
+                cacheName: "api-responses",
+                networkTimeoutSeconds: 10,
+            }),
+        },
+        // Cache favicon asli (fallback)
+        // Cache gambar favicon dan aset statis dengan CacheFirst
+        {
+            matcher: ({ request }) =>
+                request.destination === "image" ||
+                request.url.includes("/favicon/"),
+            handler: new CacheFirst({
+                cacheName: "images",
+            }),
+        },
+
+        // Cache dokumen HTML dengan NetworkFirst
+        {
+            matcher: ({ request }) => request.destination === "document",
+            handler: new NetworkFirst({
+                cacheName: "documents",
             }),
         },
         // Cache Next.js optimized images
@@ -64,41 +68,6 @@ const serwist = new Serwist({
                 ],
             }),
         },
-        // Cache favicon asli (fallback)
-        // Cache gambar favicon dan aset statis dengan CacheFirst
-        {
-            matcher: ({ request }) =>
-                request.destination === "image" ||
-                request.url.includes("/favicon/"),
-            handler: new CacheFirst({
-                cacheName: "images",
-            }),
-        },
-        // Cache API dengan NetworkFirst untuk offline support
-        {
-            matcher: ({ url }) => url.pathname.startsWith("/api/"),
-            handler: new NetworkFirst({
-                cacheName: "api-responses",
-                networkTimeoutSeconds: 10,
-            }),
-        },
-        // Cache dokumen HTML dengan NetworkFirst
-        {
-            matcher: ({ request }) => request.destination === "document",
-            handler: new NetworkFirst({
-                cacheName: "documents",
-            }),
-        },
-        // Cache aset lainnya (CSS, JS, font) dengan StaleWhileRevalidate
-        // {
-        //     matcher: ({ request }) =>
-        //         request.destination === "style" ||
-        //         request.destination === "script" ||
-        //         request.destination === "font",
-        //     handler: new StaleWhileRevalidate({
-        //         cacheName: "assets",
-        //     }),
-        // },
     ],
     fallbacks: {
         entries: [
@@ -112,13 +81,6 @@ const serwist = new Serwist({
     },
 });
 
-// Tambahkan event listener untuk auto reload
-self.addEventListener("message", (event) => {
-    if (event.data === "skipWaiting") {
-        self.skipWaiting();
-    }
-});
-
 // Auto reload saat online
 self.addEventListener("activate", () => {
     self.clients.claim().then(() => {
@@ -130,25 +92,11 @@ self.addEventListener("activate", () => {
     });
 });
 
-// Auto reload saat online kembali
-self.addEventListener("online", () => {
-    self.clients.matchAll().then((clients) => {
-        clients.forEach((client) => {
-            client.postMessage({
-                type: "NETWORK_RECONNECTED",
-                message: "Connection restored",
-            });
-        });
-    });
+// Tambahkan event listener untuk auto reload
+self.addEventListener("message", (event) => {
+    if (event.data === "skipWaiting") {
+        self.skipWaiting();
+    }
 });
-
-// Di client side (buat file baru src/utils/network-listener.ts)
-if (typeof window !== "undefined") {
-    navigator.serviceWorker?.addEventListener("message", (event) => {
-        if (event.data.type === "NETWORK_RECONNECTED") {
-            window.location.reload();
-        }
-    });
-}
 
 serwist.addEventListeners();
