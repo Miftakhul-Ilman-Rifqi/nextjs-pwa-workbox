@@ -40,7 +40,7 @@ export default function OfflinePage() {
                 <div className="flex justify-center">
                     {/* Menggunakan tag img biasa */}
                     <img
-                        src="/favicon/android-chrome-192x192.png"
+                        src="/favicon/android-chrome-512x512.png"
                         alt="Offline Icon"
                         width={96}
                         height={96}
