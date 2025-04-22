@@ -112,58 +112,14 @@ export function useCustomers({
 
     const { data, error, size, setSize, isLoading, isValidating } =
         useSWRInfinite<GetCustomersResponse>(getKey, async (url) => {
-            // try {
-            //     const response = await api.get<GetCustomersResponse>(url);
-            //     return response.data;
-            // } catch (err) {
-            //     // Fallback ke cache jika offline
-            //     if (typeof window !== "undefined" && "caches" in window) {
-            //         const cache = await caches.open("api-responses");
-            //         // url sudah berbentuk "/authenticated/customer?..."
-            //         const cacheUrl = "/api" + url;
-            //         const cachedResp = await cache.match(cacheUrl);
-            //         if (cachedResp) {
-            //             const data = await cachedResp.json();
-            //             return data as GetCustomersResponse;
-            //         }
-            //     }
-            //     throw err;
-            // }
             try {
-                // On first load, try to get from cache first if available and then update from network
-                if (typeof window !== "undefined" && "caches" in window) {
-                    const cache = await caches.open("api-responses");
-                    const cacheUrl = "/api" + url;
-                    const cachedResp = await cache.match(cacheUrl);
-
-                    if (cachedResp) {
-                        // If we have a cached response, use it immediately
-                        const cachedData = await cachedResp.json();
-
-                        // Also fetch from network to update cache in background
-                        api.get<GetCustomersResponse>(url)
-                            .then((response) => {
-                                // Update cache with fresh data
-                                cache.put(
-                                    cacheUrl,
-                                    new Response(JSON.stringify(response.data))
-                                );
-                            })
-                            .catch(() => {
-                                // Network error, we already have cached data so it's fine
-                            });
-
-                        return cachedData as GetCustomersResponse;
-                    }
-                }
-
-                // No cached data or cache not available, get from network
                 const response = await api.get<GetCustomersResponse>(url);
                 return response.data;
             } catch (err) {
-                // Fallback to cache if offline
+                // Fallback ke cache jika offline
                 if (typeof window !== "undefined" && "caches" in window) {
                     const cache = await caches.open("api-responses");
+                    // url sudah berbentuk "/authenticated/customer?..."
                     const cacheUrl = "/api" + url;
                     const cachedResp = await cache.match(cacheUrl);
                     if (cachedResp) {
