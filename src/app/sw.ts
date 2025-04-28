@@ -1,4 +1,3 @@
-import { defaultCache } from "@serwist/next/worker";
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
 import {
     CacheFirst,
@@ -31,7 +30,6 @@ const serwist = new Serwist({
     clientsClaim: true,
     navigationPreload: true,
     runtimeCaching: [
-        ...defaultCache,
         // Cache halaman HTML dengan NetworkFirst (prioritas network, fallback ke cache)
         {
             matcher({ request, sameOrigin }) {
