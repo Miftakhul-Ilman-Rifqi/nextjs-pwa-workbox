@@ -18,6 +18,12 @@ declare global {
 
 declare const self: ServiceWorkerGlobalScope;
 
+// Cache API responses for 1 day maksimum expired
+const apiCacheExpiration = new ExpirationPlugin({
+    maxEntries: 1000,
+    maxAgeSeconds: 60 * 60 * 24 * 5, // 5 hari
+});
+
 const serwist = new Serwist({
     precacheEntries: self.__SW_MANIFEST,
     skipWaiting: true,
@@ -51,12 +57,7 @@ const serwist = new Serwist({
             },
             handler: new StaleWhileRevalidate({
                 cacheName: "apis",
-                plugins: [
-                    new ExpirationPlugin({
-                        maxEntries: 1000,
-                        maxAgeSeconds: 60 * 60 * 24 * 5, // 5 hari
-                    }),
-                ],
+                plugins: [apiCacheExpiration],
             }),
         },
 
