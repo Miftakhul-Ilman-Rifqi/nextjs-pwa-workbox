@@ -33,8 +33,26 @@
 // }
 
 "use client";
+
+import { useEffect } from "react";
+
 /* eslint-disable @next/next/no-img-element */
 export default function OfflinePage() {
+    useEffect(() => {
+        const handleMessage = (event: MessageEvent) => {
+            if (event.data.type === "WINDOW_RELOAD") {
+                window.location.reload();
+            }
+        };
+        navigator.serviceWorker.addEventListener("message", handleMessage);
+        return () => {
+            navigator.serviceWorker.removeEventListener(
+                "message",
+                handleMessage
+            );
+        };
+    }, []);
+
     const handleRetry = () => {
         if (navigator.onLine) {
             window.location.reload();

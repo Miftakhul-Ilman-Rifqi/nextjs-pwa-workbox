@@ -1,6 +1,6 @@
 import { defaultCache } from "@serwist/next/worker";
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
-import { Serwist } from "serwist";
+import { CacheableResponsePlugin, NetworkFirst, Serwist, StaleWhileRevalidate } from "serwist";
 
 declare global {
     interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -18,7 +18,31 @@ const serwist = new Serwist({
     skipWaiting: true,
     clientsClaim: true,
     navigationPreload: true,
-    runtimeCaching: defaultCache,
+    runtimeCaching: [
+        ...defaultCache,
+        {
+            matcher: ({ url }) => url.pathname.startsWith("/api"),
+            handler: new NetworkFirst({
+                cacheName: "apis",
+                plugins: [
+                    new CacheableResponsePlugin({
+                        statuses: [0, 200],
+                    }),
+                ],
+            }),
+        },
+        {
+            matcher: ({ request }) => request.destination === "image",
+            handler: new StaleWhileRevalidate({
+                cacheName: "images",
+                plugins: [
+                    new CacheableResponsePlugin({
+                        statuses: [0, 200],
+                    }),
+                ],
+            }),
+        },
+    ],
     fallbacks: {
         entries: [
             {
