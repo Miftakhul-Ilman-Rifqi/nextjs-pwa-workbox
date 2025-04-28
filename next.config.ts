@@ -9,7 +9,7 @@ const withSerwist = withSerwistInit({
     cacheOnNavigation: true,
     swSrc: "src/app/sw.ts",
     swDest: "public/sw.js",
-    reloadOnOnline: true,
+    reloadOnOnline: false,
     register: true,
     additionalPrecacheEntries: [
         { url: "/~offline", revision: "1" },

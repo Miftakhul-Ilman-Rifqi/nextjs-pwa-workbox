@@ -38,21 +38,6 @@ import { useEffect } from "react";
 
 /* eslint-disable @next/next/no-img-element */
 export default function OfflinePage() {
-    useEffect(() => {
-        const handleMessage = (event: MessageEvent) => {
-            if (event.data.type === "WINDOW_RELOAD") {
-                window.location.reload();
-            }
-        };
-        navigator.serviceWorker.addEventListener("message", handleMessage);
-        return () => {
-            navigator.serviceWorker.removeEventListener(
-                "message",
-                handleMessage
-            );
-        };
-    }, []);
-
     const handleRetry = () => {
         if (navigator.onLine) {
             window.location.reload();
@@ -60,6 +45,31 @@ export default function OfflinePage() {
             alert("You are still offline. Please check your connection.");
         }
     };
+
+    useEffect(() => {
+        const handleOnline = () => {
+            window.location.reload();
+        };
+
+        // Listen for messages from service worker
+        navigator.serviceWorker.addEventListener("message", (event) => {
+            if (event.data.type === "NETWORK_RECOVERED") {
+                handleOnline();
+            }
+        });
+
+        // Also check if online when component mounts
+        if (navigator.onLine) {
+            handleOnline();
+        }
+
+        return () => {
+            navigator.serviceWorker.removeEventListener(
+                "message",
+                handleOnline
+            );
+        };
+    }, []);
 
     return (
         <div className="flex h-screen w-full items-center justify-center">

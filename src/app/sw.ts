@@ -1,6 +1,6 @@
 import { defaultCache } from "@serwist/next/worker";
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
-import { CacheableResponsePlugin, NetworkFirst, Serwist, StaleWhileRevalidate } from "serwist";
+import { Serwist } from "serwist";
 
 declare global {
     interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -18,31 +18,7 @@ const serwist = new Serwist({
     skipWaiting: true,
     clientsClaim: true,
     navigationPreload: true,
-    runtimeCaching: [
-        ...defaultCache,
-        {
-            matcher: ({ url }) => url.pathname.startsWith("/api"),
-            handler: new NetworkFirst({
-                cacheName: "apis",
-                plugins: [
-                    new CacheableResponsePlugin({
-                        statuses: [0, 200],
-                    }),
-                ],
-            }),
-        },
-        {
-            matcher: ({ request }) => request.destination === "image",
-            handler: new StaleWhileRevalidate({
-                cacheName: "images",
-                plugins: [
-                    new CacheableResponsePlugin({
-                        statuses: [0, 200],
-                    }),
-                ],
-            }),
-        },
-    ],
+    runtimeCaching: defaultCache,
     fallbacks: {
         entries: [
             {
@@ -55,22 +31,20 @@ const serwist = new Serwist({
     },
 });
 
+// Auto reload ketika online
+self.addEventListener("online", () => {
+    self.clients.matchAll({ type: "window" }).then((clients) => {
+        clients.forEach((client) => {
+            client.postMessage({ type: "NETWORK_RECOVERED" });
+        });
+    });
+});
+
 // Tambahkan event listener untuk auto reload
 self.addEventListener("message", (event) => {
     if (event.data === "skipWaiting") {
         self.skipWaiting();
     }
-});
-
-// Auto reload saat online
-self.addEventListener("activate", () => {
-    self.clients.claim().then(() => {
-        self.clients.matchAll().then((clients) => {
-            clients.forEach((client) => {
-                client.postMessage({ type: "WINDOW_RELOAD" });
-            });
-        });
-    });
 });
 
 serwist.addEventListeners();
