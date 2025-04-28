@@ -5,24 +5,26 @@ export function middleware(request: NextRequest) {
     const isLoggedIn = request.cookies.get("isLoggedIn");
     const { pathname } = request.nextUrl;
 
-    // Untuk root path, redirect ke login
+    // Handle root path
     if (pathname === "/") {
-        return NextResponse.redirect(new URL("/login", request.url));
+        return isLoggedIn
+            ? NextResponse.redirect(
+                  new URL("/input-data-customer", request.url)
+              )
+            : NextResponse.redirect(new URL("/login", request.url));
     }
 
-    // Jika path adalah /login
+    // Handle login path
     if (pathname === "/login") {
-        // Jika sudah login, redirect ke default page
         if (isLoggedIn) {
             return NextResponse.redirect(
                 new URL("/input-data-customer", request.url)
             );
         }
-        // Jika belum login, biarkan di halaman login
         return NextResponse.next();
     }
 
-    // Untuk semua path lainnya, cek login
+    // Protect all other routes
     if (!isLoggedIn) {
         return NextResponse.redirect(new URL("/login", request.url));
     }
@@ -39,6 +41,7 @@ export const config = {
         "/input-data-customer",
         "/list-customer",
         // Dynamic paths
-        "/customer/:path*", // Ini akan menangkap semua path yang dimulai dengan /customer/
+        "/customer/:path*",
+        // You can add more protected paths here
     ],
 };
