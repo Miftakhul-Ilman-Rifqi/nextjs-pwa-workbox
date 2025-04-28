@@ -31,16 +31,44 @@ const serwist = new Serwist({
     },
 });
 
-// Auto reload ketika online
-self.addEventListener("online", () => {
+let isOnline = true;
+
+const notifyClients = () => {
     self.clients.matchAll({ type: "window" }).then((clients) => {
         clients.forEach((client) => {
-            client.postMessage({ type: "NETWORK_RECOVERED" });
+            client.postMessage({ type: "NETWORK_STATUS", isOnline });
         });
     });
+};
+
+// Network detection yang lebih reliable
+const updateNetworkStatus = async () => {
+    try {
+        await fetch(window.location.origin, {
+            method: "HEAD",
+            cache: "no-store",
+        });
+        if (!isOnline) {
+            isOnline = true;
+            notifyClients();
+        }
+    } catch {
+        if (isOnline) {
+            isOnline = false;
+            notifyClients();
+        }
+    }
+};
+
+// Periodic check setiap 5 detik
+setInterval(updateNetworkStatus, 5000);
+
+// Juga check saat ada event fetch
+self.addEventListener("fetch", () => {
+    updateNetworkStatus();
 });
 
-// Tambahkan event listener untuk auto reload
+// Handle skip waiting
 self.addEventListener("message", (event) => {
     if (event.data === "skipWaiting") {
         self.skipWaiting();
