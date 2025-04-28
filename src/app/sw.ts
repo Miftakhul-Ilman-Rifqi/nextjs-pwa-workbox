@@ -1,6 +1,11 @@
 import { defaultCache } from "@serwist/next/worker";
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
-import { Serwist } from "serwist";
+import {
+    CacheFirst,
+    NetworkFirst,
+    Serwist,
+    StaleWhileRevalidate,
+} from "serwist";
 
 declare global {
     interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -18,7 +23,67 @@ const serwist = new Serwist({
     skipWaiting: true,
     clientsClaim: true,
     navigationPreload: true,
-    runtimeCaching: defaultCache,
+    runtimeCaching: [
+        ...defaultCache,
+        // Halaman HTML - Network First dengan timeout 3 detik
+        {
+            matcher({ request, sameOrigin }) {
+                return sameOrigin && request.destination === "document";
+            },
+            handler: new NetworkFirst({
+                cacheName: "pages",
+                networkTimeoutSeconds: 3,
+            }),
+        },
+
+        // API - Stale While Revalidate
+        {
+            matcher({ url }) {
+                return url.pathname.startsWith("/api/");
+            },
+            handler: new StaleWhileRevalidate({
+                cacheName: "apis",
+                plugins: [
+                    {
+                        cacheKeyWillBeUsed: async ({ request }) => {
+                            const url = new URL(request.url);
+                            // Hapus query parameter untuk caching yang lebih konsisten
+                            return url.pathname;
+                        },
+                    },
+                ],
+            }),
+        },
+
+        // Asset static - Cache First
+        {
+            matcher({ request }) {
+                return ["style", "script", "image"].includes(
+                    request.destination
+                );
+            },
+            handler: new CacheFirst({
+                cacheName: "assets",
+                plugins: [
+                    {
+                        cacheWillUpdate: async ({ response }) => {
+                            // Cache hanya response valid (status 200)
+                            return response.status === 200 ? response : null;
+                        },
+                    },
+                ],
+            }),
+        },
+
+        // Fallback untuk semua request lainnya
+        {
+            matcher: () => true,
+            handler: new NetworkFirst({
+                cacheName: "fallback",
+                networkTimeoutSeconds: 3,
+            }),
+        },
+    ],
     fallbacks: {
         entries: [
             {
