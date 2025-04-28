@@ -1,5 +1,6 @@
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
 import {
+    CacheableResponsePlugin,
     CacheFirst,
     ExpirationPlugin,
     NetworkFirst,
@@ -18,12 +19,6 @@ declare global {
 
 declare const self: ServiceWorkerGlobalScope;
 
-// Cache API responses for 1 day maksimum expired
-const apiCacheExpiration = new ExpirationPlugin({
-    maxEntries: 1000,
-    maxAgeSeconds: 60 * 60 * 24 * 5, // 5 hari
-});
-
 const serwist = new Serwist({
     precacheEntries: self.__SW_MANIFEST,
     skipWaiting: true,
@@ -39,6 +34,9 @@ const serwist = new Serwist({
                 cacheName: "pages",
                 networkTimeoutSeconds: 3, // Timeout 3 detik lalu fallback ke cache
                 plugins: [
+                    new CacheableResponsePlugin({
+                        statuses: [200], // Hanya cache respons dengan status 200
+                    }),
                     new ExpirationPlugin({
                         maxEntries: 100,
                         maxAgeSeconds: 60 * 60 * 24 * 30, // 30 hari
@@ -57,7 +55,12 @@ const serwist = new Serwist({
             },
             handler: new StaleWhileRevalidate({
                 cacheName: "apis",
-                plugins: [apiCacheExpiration],
+                plugins: [
+                    new ExpirationPlugin({
+                        maxEntries: 1000,
+                        maxAgeSeconds: 60 * 60 * 24 * 5, // 5 hari
+                    }),
+                ],
             }),
         },
 
