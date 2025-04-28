@@ -1,7 +1,7 @@
-import { defaultCache } from "@serwist/next/worker";
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
 import {
     CacheFirst,
+    ExpirationPlugin,
     NetworkFirst,
     Serwist,
     StaleWhileRevalidate,
@@ -18,69 +18,78 @@ declare global {
 
 declare const self: ServiceWorkerGlobalScope;
 
+// Cache API responses for 1 day maksimum expired
+const apiCacheExpiration = new ExpirationPlugin({
+    maxEntries: 1000,
+    maxAgeSeconds: 60 * 60 * 24 * 5, // 5 hari
+});
+
 const serwist = new Serwist({
     precacheEntries: self.__SW_MANIFEST,
     skipWaiting: true,
     clientsClaim: true,
     navigationPreload: true,
     runtimeCaching: [
-        ...defaultCache,
-        // Halaman HTML - Network First dengan timeout 3 detik
+        // Cache halaman HTML dengan NetworkFirst (prioritas network, fallback ke cache)
         {
             matcher({ request, sameOrigin }) {
                 return sameOrigin && request.destination === "document";
             },
             handler: new NetworkFirst({
                 cacheName: "pages",
-                networkTimeoutSeconds: 3,
-            }),
-        },
-
-        // API - Stale While Revalidate
-        {
-            matcher({ url }) {
-                return url.pathname.startsWith("/api/");
-            },
-            handler: new StaleWhileRevalidate({
-                cacheName: "apis",
+                networkTimeoutSeconds: 3, // Timeout 3 detik lalu fallback ke cache
                 plugins: [
-                    {
-                        cacheKeyWillBeUsed: async ({ request }) => {
-                            const url = new URL(request.url);
-                            // Hapus query parameter untuk caching yang lebih konsisten
-                            return url.pathname;
-                        },
-                    },
+                    new ExpirationPlugin({
+                        maxEntries: 100,
+                        maxAgeSeconds: 60 * 60 * 24 * 30, // 30 hari
+                    }),
                 ],
             }),
         },
 
-        // Asset static - Cache First
+        // Cache API responses dengan StaleWhileRevalidate (cache dulu, update di background)
+        {
+            matcher({ url }) {
+                return (
+                    url.pathname.startsWith("/api/") ||
+                    url.pathname.startsWith("/authenticated/")
+                );
+            },
+            handler: new StaleWhileRevalidate({
+                cacheName: "apis",
+                plugins: [apiCacheExpiration],
+            }),
+        },
+
+        // Cache assets dengan CacheFirst (prioritas cache)
         {
             matcher({ request }) {
-                return ["style", "script", "image"].includes(
+                return ["style", "script", "image", "font"].includes(
                     request.destination
                 );
             },
             handler: new CacheFirst({
                 cacheName: "assets",
                 plugins: [
-                    {
-                        cacheWillUpdate: async ({ response }) => {
-                            // Cache hanya response valid (status 200)
-                            return response.status === 200 ? response : null;
-                        },
-                    },
+                    new ExpirationPlugin({
+                        maxEntries: 300,
+                        maxAgeSeconds: 60 * 60 * 24 * 60, // 60 hari
+                    }),
                 ],
             }),
         },
 
-        // Fallback untuk semua request lainnya
+        // Fallback untuk semua request lainnya (cache setelah pertama kali diakses)
         {
-            matcher: () => true,
+            matcher: () => true, // Tangkap semua request
             handler: new NetworkFirst({
-                cacheName: "fallback",
-                networkTimeoutSeconds: 3,
+                cacheName: "misc",
+                plugins: [
+                    new ExpirationPlugin({
+                        maxEntries: 200,
+                        maxAgeSeconds: 60 * 60 * 24, // 1 hari
+                    }),
+                ],
             }),
         },
     ],
