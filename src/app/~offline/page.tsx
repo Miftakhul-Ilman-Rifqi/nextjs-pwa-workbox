@@ -34,12 +34,12 @@
 // }
 
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export default function OfflinePage() {
     const [isChecking, setIsChecking] = useState(false);
 
-    const checkNetwork = async () => {
+    const checkNetwork = useCallback(async () => {
         setIsChecking(true);
         try {
             const response = await fetch("/", {
@@ -54,7 +54,7 @@ export default function OfflinePage() {
         } finally {
             setIsChecking(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         const messageHandler = (event: MessageEvent) => {
