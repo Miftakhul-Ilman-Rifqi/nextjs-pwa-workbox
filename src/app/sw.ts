@@ -120,6 +120,7 @@ const updateNetworkStatus = async () => {
         await fetch(window.location.origin, {
             method: "HEAD",
             cache: "no-store",
+            mode: "no-cors", // Cegah masalah CORS
         });
         if (!isOnline) {
             isOnline = true;
