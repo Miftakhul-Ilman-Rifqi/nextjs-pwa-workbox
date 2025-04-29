@@ -9,8 +9,8 @@ const withSerwist = withSerwistInit({
     cacheOnNavigation: true,
     swSrc: "src/app/sw.ts",
     swDest: "public/sw.js",
-    reloadOnOnline: false,
-    register: false,
+    reloadOnOnline: true,
+    register: true,
     additionalPrecacheEntries: [
         { url: "/~offline", revision: "1" },
         { url: "/manifest.json", revision: "1" },
