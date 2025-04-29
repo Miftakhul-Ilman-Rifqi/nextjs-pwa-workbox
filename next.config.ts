@@ -10,7 +10,7 @@ const withSerwist = withSerwistInit({
     swSrc: "src/app/sw.ts",
     swDest: "public/sw.js",
     reloadOnOnline: false,
-    register: true,
+    register: false,
     additionalPrecacheEntries: [
         { url: "/~offline", revision: "1" },
         { url: "/manifest.json", revision: "1" },
