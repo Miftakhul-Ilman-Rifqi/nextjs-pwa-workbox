@@ -2,6 +2,12 @@
     "name": "Customer Management App",
     "short_name": "CMS App",
     "description": "Aplikasi manajemen data customer",
+    "theme_color": "#2563eb",
+    "background_color": "#ffffff",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait",
     "icons": [
         {
             "src": "/favicon/android-chrome-192x192.png",
@@ -15,10 +21,5 @@
             "type": "image/png",
             "purpose": "any maskable"
         }
-    ],
-    "theme_color": "#2563eb",
-    "background_color": "#ffffff",
-    "start_url": "/",
-    "display": "standalone",
-    "orientation": "portrait"
+    ]
 }
