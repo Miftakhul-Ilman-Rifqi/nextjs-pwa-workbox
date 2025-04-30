@@ -87,25 +87,25 @@ export function InstallPWA() {
     if (isPWA || !isVisible) return null;
 
     return (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-fade-in w-[90%] max-w-md">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex items-center gap-4 border border-blue-200 dark:border-blue-800">
-                <div className="flex-1">
-                    <p className="text-sm font-medium dark:text-white">
-                        Install aplikasi ini untuk akses lebih cepat
-                    </p>
-                </div>
-                <div className="flex gap-2">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setIsVisible(false)}
-                    >
-                        Nanti
-                    </Button>
-                    <Button size="sm" onClick={handleInstall}>
-                        Install
-                    </Button>
-                </div>
+            <div className="flex-1">
+                <p className="text-sm font-medium dark:text-white">
+                Install aplikasi ini untuk akses lebih cepat
+                </p>
+            </div>
+            <div className="flex gap-2">
+                <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsVisible(false)}
+                >
+                Nanti
+                </Button>
+                <Button size="sm" onClick={handleInstall}>
+                Pasang
+                </Button>
+            </div>
             </div>
         </div>
     );
