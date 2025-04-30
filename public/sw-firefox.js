@@ -6,7 +6,8 @@ const ASSET_CACHE = "cms-assets-v1";
 
 const STATIC_ASSETS = [
     "/",
-    "/offline",
+    "/~offline",
+    "/offline.html",
     "/manifest.json",
     "/favicon/android-chrome-192x192.png",
     "/favicon/android-chrome-512x512.png",
@@ -37,7 +38,7 @@ self.addEventListener("fetch", (evt) => {
         evt.respondWith(
             fetch(request)
                 .then((res) => res)
-                .catch(() => caches.match("/~offline"))
+                .catch(() => caches.match("/offline.html"))
         );
         return;
     }
