@@ -14,7 +14,6 @@ const withSerwist = withSerwistInit({
     scope: "/",
     additionalPrecacheEntries: [
         { url: "/~offline", revision: "1" },
-        { url: "/offline", revision: "1" },
         { url: "/manifest.json", revision: "1" },
         // Precache URL optimized image
         { url: "/favicon/android-chrome-512x512.png", revision: "1" },
