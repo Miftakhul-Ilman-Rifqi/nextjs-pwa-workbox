@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 // export default function OfflinePage() {
 //     return (
 //         <div className="flex min-h-screen flex-col items-center justify-center p-4">
@@ -33,6 +32,7 @@
 //     );
 // }
 
+/* eslint-disable @next/next/no-img-element */
 "use client";
 import { useCallback, useEffect, useState } from "react";
 

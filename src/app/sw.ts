@@ -117,7 +117,7 @@ const notifyClients = () => {
 // Network detection yang lebih reliable dan kompatibel dengan Firefox
 const updateNetworkStatus = async () => {
     try {
-        await fetch(window.location.origin, {
+        await fetch(self.location.origin, {
             method: "HEAD",
             cache: "no-store",
         });

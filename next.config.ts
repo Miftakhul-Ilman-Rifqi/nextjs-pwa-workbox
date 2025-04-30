@@ -11,6 +11,7 @@ const withSerwist = withSerwistInit({
     swDest: "public/sw.js",
     reloadOnOnline: true,
     register: true,
+    scope: "/",
     additionalPrecacheEntries: [
         { url: "/~offline", revision: "1" },
         { url: "/manifest.json", revision: "1" },
@@ -22,6 +23,7 @@ const withSerwist = withSerwistInit({
 /** @type {import("next").NextConfig} */
 const nextConfig = {
     // reactStrictMode: true,
+    compileSrc: true, // Aktifkan bundling SW
 };
 
 export default withSerwist(nextConfig);
