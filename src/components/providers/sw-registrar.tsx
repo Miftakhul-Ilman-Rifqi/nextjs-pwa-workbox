@@ -20,16 +20,20 @@ export default function SWRegistrar() {
         // Jika Firefox, daftarkan sw-firefox.js; selain itu pakai Serwist API
         if (isFirefox()) {
             navigator.serviceWorker
-                .register("/sw-firefox.js", { scope: "/" })
-                .then((reg) => console.log("SW Firefox terdaftar:", reg))
+                .register("/sw-firefox.js")
+                .then((reg) => {
+                    console.log("Firefox SW terdaftar:", reg);
+                })
                 .catch((err) =>
                     console.error("Gagal register sw-firefox.js:", err)
                 );
         } else if (window.serwist) {
-            window.serwist.register(); // register sw.js (ESM) via Serwist :contentReference[oaicite:4]{index=4}
+            // window.serwist.register() akan memanggil public/sw.js (hasil Serwist)
+            window.serwist.register();
         } else {
+            // fallback murni jika window.serwist belum tersedia
             navigator.serviceWorker
-                .register("/sw.js", { type: "module", scope: "/" })
+                .register("/sw.js", { type: "module" })
                 .then((reg) => console.log("SW fallback terdaftar:", reg))
                 .catch((err) => console.error("Gagal register sw.js:", err));
         }

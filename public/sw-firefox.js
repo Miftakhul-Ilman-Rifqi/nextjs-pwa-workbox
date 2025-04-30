@@ -6,7 +6,7 @@ const ASSET_CACHE = "cms-assets-v1";
 
 const STATIC_ASSETS = [
     "/",
-    "/offline.html",
+    "/offline",
     "/manifest.json",
     "/favicon/android-chrome-192x192.png",
     "/favicon/android-chrome-512x512.png",
@@ -16,16 +16,10 @@ const STATIC_ASSETS = [
 // Install: precache shell
 self.addEventListener("install", (evt) => {
     evt.waitUntil(
-        (async () => {
-            const cache = await caches.open(CACHE_NAME);
-            try {
-                await cache.addAll(STATIC_ASSETS);
-            } catch (err) {
-                console.warn("Precache gagal sebagian:", err);
-                // tetap lanjutkan install meski ada error
-            }
-            await self.skipWaiting();
-        })()
+        caches
+            .open(CACHE_NAME)
+            .then((cache) => cache.addAll(STATIC_ASSETS))
+            .then(() => self.skipWaiting())
     );
 });
 
