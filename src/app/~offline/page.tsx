@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @next/next/no-img-element */
 // export default function OfflinePage() {
 //     return (
@@ -39,41 +38,24 @@ import { useCallback, useEffect, useState } from "react";
 
 export default function OfflinePage() {
     const [isChecking, setIsChecking] = useState(false);
-    const [reconnectAttempts, setReconnectAttempts] = useState(0);
 
     const checkNetwork = useCallback(async () => {
         setIsChecking(true);
         try {
-            // Tambahkan timestamp untuk menghindari cache Firefox
-            const timestamp = Date.now();
-            const response = await fetch(`/?t=${timestamp}`, {
+            const response = await fetch("/", {
                 method: "HEAD",
                 cache: "no-store",
-                mode: "no-cors", // Penting untuk Firefox
-                credentials: "omit", // Hindari cookie untuk kurangi overhead
             });
 
-            // Firefox kadang tidak throw error meskipun offline
-            // Kita hanya reload jika response.type bukan opaque (untuk Firefox)
-            if (response.type !== "opaque" || navigator.onLine) {
+            if (response.ok) {
                 window.location.reload();
-            } else {
-                throw new Error("Still offline");
             }
-        } catch (err) {
-            // Increment reconnect attempts
-            setReconnectAttempts((prev) => prev + 1);
-
-            // Exponential backoff untuk mengurangi beban
-            const delay = Math.min(
-                3000 * Math.pow(1.5, Math.min(reconnectAttempts, 5)),
-                30000
-            );
-            setTimeout(() => checkNetwork(), delay);
+        } catch {
+            setTimeout(() => checkNetwork(), 3000);
         } finally {
             setIsChecking(false);
         }
-    }, [reconnectAttempts]);
+    }, []);
 
     useEffect(() => {
         const messageHandler = (event: MessageEvent) => {
@@ -82,26 +64,17 @@ export default function OfflinePage() {
             }
         };
 
-        // Firefox support: listen to online/offline events
-        const handleOnline = () => {
-            window.location.reload();
-        };
-
         // Mulai pengecekan jaringan
         checkNetwork();
 
         // Listen for messages dari service worker
         navigator.serviceWorker?.addEventListener("message", messageHandler);
 
-        // Listen untuk event online browser (Firefox support)
-        window.addEventListener("online", handleOnline);
-
         return () => {
             navigator.serviceWorker?.removeEventListener(
                 "message",
                 messageHandler
             );
-            window.removeEventListener("online", handleOnline);
         };
     }, [checkNetwork]);
 

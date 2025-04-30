@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
 import {
     CacheFirst,
@@ -118,23 +117,16 @@ const notifyClients = () => {
 // Network detection yang lebih reliable dan kompatibel dengan Firefox
 const updateNetworkStatus = async () => {
     try {
-        // Gunakan randomized parameter untuk menghindari cache Firefox
-        const timestamp = Date.now();
-        const response = await fetch(
-            `${self.location.origin}/status-check?t=${timestamp}`,
-            {
-                method: "HEAD",
-                cache: "no-store",
-                credentials: "omit", // Hindari cookie untuk kurangi overhead
-                mode: "no-cors", // Penting untuk kompatibilitas Firefox
-            }
-        );
+        await fetch(window.location.origin, {
+            method: "HEAD",
+            cache: "no-store",
+        });
 
         if (!isOnline) {
             isOnline = true;
             notifyClients();
         }
-    } catch (error) {
+    } catch {
         if (isOnline) {
             isOnline = false;
             notifyClients();
@@ -145,22 +137,9 @@ const updateNetworkStatus = async () => {
 // Periodic check setiap 5 detik
 setInterval(updateNetworkStatus, 5000);
 
-// Handle navigator.onLine untuk Firefox
-self.addEventListener("online", () => {
-    updateNetworkStatus();
-});
-
-self.addEventListener("offline", () => {
-    if (isOnline) {
-        isOnline = false;
-        notifyClients();
-    }
-});
-
 // Juga check saat ada event fetch
 self.addEventListener("fetch", () => {
-    // Tambahkan timeout untuk mengurangi beban dan hindari blocking di Firefox
-    setTimeout(updateNetworkStatus, 1000);
+    updateNetworkStatus();
 });
 
 // Handle skip waiting

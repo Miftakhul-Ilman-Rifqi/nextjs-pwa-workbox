@@ -59,7 +59,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "sonner";
-import NetworkStatus from "../components/network-status";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -147,12 +146,6 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en" suppressHydrationWarning>
-            <head>
-                {/* Meta tags khusus untuk Firefox PWA */}
-                <meta name="apple-mobile-web-app-capable" content="yes" />
-                <meta name="mobile-web-app-capable" content="yes" />
-                <link rel="manifest" href="/manifest.json" />
-            </head>
             <body
                 className={`${geistSans.variable} ${geistMono.variable} antialiased`}
             >
@@ -164,27 +157,7 @@ export default function RootLayout({
                 >
                     {children}
                     <Toaster />
-                    <NetworkStatus />
                 </ThemeProvider>
-                {/* Script untuk mendaftarkan service worker lebih reliabel di Firefox */}
-                <script
-                    dangerouslySetInnerHTML={{
-                        __html: `
-                        if ('serviceWorker' in navigator) {
-                            window.addEventListener('load', function() {
-                                navigator.serviceWorker.register('/sw.js').then(
-                                    function(registration) {
-                                        console.log('Service Worker registered with scope:', registration.scope);
-                                    },
-                                    function(error) {
-                                        console.log('Service Worker registration failed:', error);
-                                    }
-                                );
-                            });
-                        }
-                        `,
-                    }}
-                />
             </body>
         </html>
     );
