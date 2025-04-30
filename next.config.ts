@@ -6,7 +6,6 @@ import withSerwistInit from "@serwist/next";
 // A viable option is `git rev-parse HEAD`.
 
 const withSerwist = withSerwistInit({
-    compileSrc: true, // Aktifkan bundling SW
     cacheOnNavigation: true,
     swSrc: "src/app/sw.ts",
     swDest: "public/sw.js",
