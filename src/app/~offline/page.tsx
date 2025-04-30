@@ -1,24 +1,26 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
-
-import { useEffect, useState, useCallback } from "react";
+import { useState, useEffect } from "react";
 
 export default function OfflinePage() {
     const [loading, setLoading] = useState(false);
 
-    const checkConnection = useCallback(() => {
+    const checkConnection = () => {
         setLoading(true);
-        setTimeout(() => {
-            setLoading(false);
-        }, 1000);
-    }, []);
+        // Attempt to reload the page
+        window.location.reload();
+    };
 
+    // Auto refresh every 5 seconds
     useEffect(() => {
-        const interval = setInterval(() => {
-            checkConnection();
+        const intervalId = setInterval(() => {
+            if (!loading) {
+                checkConnection();
+            }
         }, 5000);
-        return () => clearInterval(interval);
-    }, [checkConnection]);
+
+        return () => clearInterval(intervalId);
+    }, [loading]);
 
     return (
         <div className="flex h-screen w-full items-center justify-center">
