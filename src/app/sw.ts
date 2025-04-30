@@ -104,49 +104,4 @@ const serwist = new Serwist({
     },
 });
 
-let isOnline = true;
-
-const notifyClients = () => {
-    self.clients.matchAll({ type: "window" }).then((clients) => {
-        clients.forEach((client) => {
-            client.postMessage({ type: "NETWORK_STATUS", isOnline });
-        });
-    });
-};
-
-// Network detection yang lebih reliable dan kompatibel dengan Firefox
-const updateNetworkStatus = async () => {
-    try {
-        await fetch(self.location.origin, {
-            method: "HEAD",
-            cache: "no-store",
-        });
-
-        if (!isOnline) {
-            isOnline = true;
-            notifyClients();
-        }
-    } catch {
-        if (isOnline) {
-            isOnline = false;
-            notifyClients();
-        }
-    }
-};
-
-// Periodic check setiap 5 detik
-setInterval(updateNetworkStatus, 5000);
-
-// Juga check saat ada event fetch
-self.addEventListener("fetch", () => {
-    updateNetworkStatus();
-});
-
-// Handle skip waiting
-self.addEventListener("message", (event) => {
-    if (event.data === "skipWaiting") {
-        self.skipWaiting();
-    }
-});
-
 serwist.addEventListeners();
