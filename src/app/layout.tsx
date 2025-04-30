@@ -60,7 +60,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "sonner";
-import SWRegistrar from "../components/providers/sw-registrar";
+// import SWRegistrar from "../components/providers/sw-registrar";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -157,7 +157,7 @@ export default function RootLayout({
                     enableSystem
                     disableTransitionOnChange
                 >
-                    <SWRegistrar />
+                    {/* <SWRegistrar /> */}
                     {children}
                     <Toaster />
                 </ThemeProvider>
