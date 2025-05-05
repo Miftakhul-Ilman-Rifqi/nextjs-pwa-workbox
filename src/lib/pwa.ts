@@ -1,7 +1,11 @@
 import { Workbox } from "workbox-window";
 
 export function registerServiceWorker() {
-    if ("serviceWorker" in navigator && process.env.NODE_ENV === "production") {
+    if (
+        typeof window !== "undefined" &&
+        "serviceWorker" in navigator &&
+        process.env.NODE_ENV === "production"
+    ) {
         const wb = new Workbox("/sw.js");
 
         wb.addEventListener("installed", (event) => {
@@ -16,14 +20,10 @@ export function registerServiceWorker() {
             }
         });
 
-        wb.register();
-    }
-}
-
-export function unregisterServiceWorker() {
-    if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.ready.then((registration) => {
-            registration.unregister();
-        });
+        wb.register()
+            .then(() => console.log("Service Worker registered"))
+            .catch((err) =>
+                console.error("Service Worker registration failed: ", err)
+            );
     }
 }
