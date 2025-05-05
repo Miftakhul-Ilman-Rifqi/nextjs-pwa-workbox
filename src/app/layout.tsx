@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "sonner";
-import { PWAProvider } from "../components/providers/pwa-provider";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -100,10 +99,8 @@ export default function RootLayout({
                     enableSystem
                     disableTransitionOnChange
                 >
-                    <PWAProvider>
-                        {children}
-                        <Toaster />
-                    </PWAProvider>
+                    {children}
+                    <Toaster />
                 </ThemeProvider>
             </body>
         </html>
