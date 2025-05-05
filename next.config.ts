@@ -15,30 +15,13 @@ const withSerwist = withSerwistInit({
     additionalPrecacheEntries: [
         { url: "/~offline", revision: "1" },
         { url: "/manifest.json", revision: "1" },
-        { url: "/offline.html", revision: "1" }, // Tambahkan offline.html
-        { url: "/classic-sw.js", revision: "1" }, // Tambahkan classic-sw.js
-        { url: "/register-classic-sw.js", revision: "1" }, // Tambahkan register-classic-sw.js
+        { url: "/offline.html", revision: "1" },
         // Precache URL optimized image
         { url: "/favicon/android-chrome-512x512.png", revision: "1" },
     ],
 });
 
 /** @type {import("next").NextConfig} */
-const nextConfig = {
-    // Konfigurasi untuk headers khusus
-    async headers() {
-        return [
-            {
-                source: "/(.*)",
-                headers: [
-                    {
-                        key: "Service-Worker-Allowed",
-                        value: "/",
-                    },
-                ],
-            },
-        ];
-    },
-};
+const nextConfig = {};
 
 export default withSerwist(nextConfig);

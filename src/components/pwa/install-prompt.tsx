@@ -29,6 +29,17 @@ export function InstallPWA() {
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
+        // Registrasi service worker klasik untuk Firefox
+        const isFirefox = navigator.userAgent.includes("Firefox");
+
+        if (isFirefox && "serviceWorker" in navigator) {
+            navigator.serviceWorker.register("/service-worker-classic.js", {
+                scope: "/",
+            });
+        }
+    }, []);
+
+    useEffect(() => {
         const checkPWA = () => {
             setIsPWA(
                 window.matchMedia("(display-mode: standalone)").matches ||
@@ -89,23 +100,23 @@ export function InstallPWA() {
     return (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-fade-in w-[90%] max-w-md">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 flex items-center gap-4 border border-blue-200 dark:border-blue-800">
-            <div className="flex-1">
-                <p className="text-sm font-medium dark:text-white">
-                Install aplikasi ini untuk akses lebih cepat
-                </p>
-            </div>
-            <div className="flex gap-2">
-                <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsVisible(false)}
-                >
-                Nanti
-                </Button>
-                <Button size="sm" onClick={handleInstall}>
-                Pasang
-                </Button>
-            </div>
+                <div className="flex-1">
+                    <p className="text-sm font-medium dark:text-white">
+                        Install aplikasi ini untuk akses lebih cepat
+                    </p>
+                </div>
+                <div className="flex gap-2">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsVisible(false)}
+                    >
+                        Nanti
+                    </Button>
+                    <Button size="sm" onClick={handleInstall}>
+                        Pasang
+                    </Button>
+                </div>
             </div>
         </div>
     );
