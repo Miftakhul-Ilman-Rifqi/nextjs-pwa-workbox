@@ -60,6 +60,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "sonner";
+import Script from "next/script";
 // import SWRegistrar from "../components/providers/sw-registrar";
 
 const geistSans = Geist({
@@ -161,6 +162,8 @@ export default function RootLayout({
                     {children}
                     <Toaster />
                 </ThemeProvider>
+                {/* Script untuk service worker klasik (untuk Firefox) */}
+                <Script src="/register-classic-sw.js" strategy="lazyOnload" />
             </body>
         </html>
     );
