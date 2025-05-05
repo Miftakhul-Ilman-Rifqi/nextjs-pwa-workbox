@@ -9,13 +9,14 @@ const nextConfig: NextConfig = {
             config.plugins.push(
                 new InjectManifest({
                     swSrc: join(__dirname, "src", "sw.ts"),
-                    swDest: join(__dirname, "public", "sw.js"), // Output ke folder public
+                    swDest: join(__dirname, "public", "sw.js"),
                     exclude: [
                         /_next\/static\/chunks\/pages\/api/,
                         /middleware-manifest\.json$/,
                         /_middleware\.js$/,
-                        /\/_error\.js$/i,
-                        /\.js\.map$/i,
+                        /_error\.js$/,
+                        /_next\/app-build-manifest\.json$/,
+                        /_next\/build-manifest\.json$/,
                     ],
                     maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
                 })

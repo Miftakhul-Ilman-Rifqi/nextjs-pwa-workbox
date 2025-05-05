@@ -1,18 +1,33 @@
 import { clientsClaim } from "workbox-core";
-import { precacheAndRoute } from "workbox-precaching";
+import { precacheAndRoute, createHandlerBoundToURL } from "workbox-precaching";
 import { registerRoute } from "workbox-routing";
-import {
-    StaleWhileRevalidate,
-    NetworkFirst,
-    CacheFirst,
-} from "workbox-strategies";
-import { ExpirationPlugin } from "workbox-expiration";
+import { NetworkFirst, StaleWhileRevalidate } from "workbox-strategies";
 import { CacheableResponsePlugin } from "workbox-cacheable-response";
 
 declare const self: ServiceWorkerGlobalScope;
 
-// Precache all assets
-precacheAndRoute(self.__WB_MANIFEST);
+// Filter manifest untuk menghilangkan file yang tidak perlu
+const manifest = (self.__WB_MANIFEST || []).filter((entry) => {
+    if (typeof entry === "string") {
+        return (
+            !entry.includes("_next/app-build-manifest.json") &&
+            !entry.includes("_next/build-manifest.json")
+        );
+    }
+    return (
+        !entry.url.includes("_next/app-build-manifest.json") &&
+        !entry.url.includes("_next/build-manifest.json")
+    );
+});
+
+// Precache hanya assets yang diperlukan
+precacheAndRoute(manifest);
+
+// Fallback untuk halaman
+registerRoute(
+    ({ request }) => request.mode === "navigate",
+    createHandlerBoundToURL("/offline")
+);
 
 // Cache API responses
 registerRoute(
@@ -22,10 +37,6 @@ registerRoute(
         plugins: [
             new CacheableResponsePlugin({
                 statuses: [0, 200],
-            }),
-            new ExpirationPlugin({
-                maxEntries: 50,
-                maxAgeSeconds: 24 * 60 * 60, // 1 hari
             }),
         ],
     })
@@ -40,34 +51,6 @@ registerRoute(
     })
 );
 
-// Cache images
-registerRoute(
-    ({ request }) => request.destination === "image",
-    new CacheFirst({
-        cacheName: "images",
-        plugins: [
-            new ExpirationPlugin({
-                maxEntries: 100,
-                maxAgeSeconds: 30 * 24 * 60 * 60, // 30 hari
-            }),
-        ],
-    })
-);
-
-// Fallback untuk offline
-registerRoute(
-    ({ request }) => request.mode === "navigate",
-    new NetworkFirst({
-        cacheName: "pages",
-        networkTimeoutSeconds: 3,
-        plugins: [
-            new CacheableResponsePlugin({
-                statuses: [0, 200],
-            }),
-        ],
-    })
-);
-
 self.addEventListener("message", (event) => {
     if (event.data && event.data.type === "SKIP_WAITING") {
         self.skipWaiting();
@@ -75,3 +58,5 @@ self.addEventListener("message", (event) => {
 });
 
 clientsClaim();
+
+console.log("Files to precache:", manifest);
