@@ -14,7 +14,8 @@ const nextConfig: NextConfig = {
                         /_next\/static\/chunks\/pages\/api/,
                         /middleware-manifest\.json$/,
                         /_middleware\.js$/,
-                        /_error\.js$/,
+                        /\/_error\.js$/i,
+                        /\.js\.map$/i,
                     ],
                     maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
                 })
