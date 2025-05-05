@@ -4,7 +4,9 @@
     "private": true,
     "scripts": {
         "dev": "next dev --turbopack",
-        "build": "prisma generate && next build",
+        "build": "npm run install:legacy && npm run build:next",
+        "install:legacy": "npm install --legacy-peer-deps",
+        "build:next": "prisma generate && next build",
         "start": "next start",
         "lint": "next lint"
     },
