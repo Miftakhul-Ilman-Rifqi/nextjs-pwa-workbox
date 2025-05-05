@@ -50,6 +50,13 @@
         "prisma": "^6.2.1",
         "tailwindcss": "^3.4.1",
         "typescript": "^5",
-        "webpack": "^5.97.1"
+        "webpack": "^5.97.1",
+        "workbox-cacheable-response": "^7.3.0",
+        "workbox-expiration": "^7.3.0",
+        "workbox-precaching": "^7.3.0",
+        "workbox-routing": "^7.3.0",
+        "workbox-strategies": "^7.3.0",
+        "workbox-webpack-plugin": "^7.3.0",
+        "workbox-window": "^7.3.0"
     }
 }

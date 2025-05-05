@@ -40,6 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Serwist
+# Serwice Worker
 public/sw.js
-public/swe-worker*
+public/sw.js.map
+public/workbox-*.js

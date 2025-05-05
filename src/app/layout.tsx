@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "sonner";
+import { useEffect } from "react";
+import { registerServiceWorker } from "../lib/pwa";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -88,6 +90,9 @@ export default function RootLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
+    useEffect(() => {
+        registerServiceWorker();
+    }, []);
     return (
         <html lang="en" suppressHydrationWarning>
             <body
