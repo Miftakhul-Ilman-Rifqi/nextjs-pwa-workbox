@@ -3,8 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { Toaster } from "sonner";
-import { useEffect } from "react";
-import { registerServiceWorker } from "../lib/pwa";
+import { PWAProvider } from "../components/providers/pwa-provider";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -90,9 +89,6 @@ export default function RootLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
-    useEffect(() => {
-        registerServiceWorker();
-    }, []);
     return (
         <html lang="en" suppressHydrationWarning>
             <body
@@ -104,8 +100,10 @@ export default function RootLayout({
                     enableSystem
                     disableTransitionOnChange
                 >
-                    {children}
-                    <Toaster />
+                    <PWAProvider>
+                        {children}
+                        <Toaster />
+                    </PWAProvider>
                 </ThemeProvider>
             </body>
         </html>
