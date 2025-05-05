@@ -29,17 +29,6 @@ export function InstallPWA() {
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
-        // Registrasi service worker klasik untuk Firefox
-        const isFirefox = navigator.userAgent.includes("Firefox");
-
-        if (isFirefox && "serviceWorker" in navigator) {
-            navigator.serviceWorker.register("/service-worker-classic.js", {
-                scope: "/",
-            });
-        }
-    }, []);
-
-    useEffect(() => {
         const checkPWA = () => {
             setIsPWA(
                 window.matchMedia("(display-mode: standalone)").matches ||

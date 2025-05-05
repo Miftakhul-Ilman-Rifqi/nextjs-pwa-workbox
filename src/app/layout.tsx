@@ -161,7 +161,6 @@ export default function RootLayout({
                     {children}
                     <Toaster />
                 </ThemeProvider>
-                <script src="/register-sw-classic.js" async />
             </body>
         </html>
     );
